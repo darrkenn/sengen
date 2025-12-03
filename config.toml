@@ -1,3 +1,2 @@
-generations = 10000
-best_possible = 36
-population_count = 1000
+generations = 1000
+population_count = 200
