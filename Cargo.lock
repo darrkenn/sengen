@@ -6,6 +6,7 @@ version = 4
 name = "GA"
 version = "0.1.0"
 dependencies = [
+ "genetica",
  "rand",
  "serde",
  "toml",
@@ -22,6 +23,15 @@ name = "equivalent"
 version = "1.0.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "877a4ace8713b0bcf2a4e7eec82529c029f1d0619886d18145fea96c3ffe5c0f"
+
+[[package]]
+name = "genetica"
+version = "0.1.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "e07b81a941b4b11d6ec524f0dfe6222bc45e72c4f7b836766d96b88757f960d4"
+dependencies = [
+ "rand",
+]
 
 [[package]]
 name = "getrandom"
