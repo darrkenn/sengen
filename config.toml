@@ -1,2 +1,2 @@
-generations = 1000
-population_count = 250
+generations = 10000
+population_count = 100 

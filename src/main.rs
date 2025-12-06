@@ -7,28 +7,39 @@ use genetica::{
 };
 use serde::Deserialize;
 
-const PC: f32 = 0.7;
+const PC: f32 = 0.6;
 const PM: f32 = 0.05;
 
-const ARRAYSIZE: usize = 12;
+const ARRAYSIZE: usize = 17;
+//There has to be a better way to do this
+const SENTENCE: [char; ARRAYSIZE] = [
+    'h', 'e', 'y', ' ', 'i', 'm', ' ', 'a', ' ', 'c', 'o', 'm', 'p', 'u', 't', 'e', 'r',
+];
 
+const AVAILABLE_CHARS_COUNT: usize = 27;
+const AVAILABLE_CHARS: [char; AVAILABLE_CHARS_COUNT] = [
+    'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm', 'n', 'o', 'p', 'q', 'r', 's',
+    't', 'u', 'v', 'w', 'x', 'y', 'z', ' ',
+];
+/*
 const VALUES: [i32; ARRAYSIZE] = [75, 22, 91, 48, 15, 63, 30, 88, 55, 12, 99, 40];
 const WEIGHTS: [i32; ARRAYSIZE] = [3, 1, 5, 2, 1, 4, 2, 5, 3, 1, 5, 2];
 const MAX_WEIGHT: i32 = 12;
+*/
 
-#[derive(Debug, Clone, Copy)]
-struct GeneType(pub bool);
+#[derive(Debug, Clone, Copy, PartialEq)]
+struct GeneType(pub char);
 
 impl Generate for GeneType {
     fn generate() -> Self {
-        GeneType(rand::random_bool(0.25))
+        GeneType(AVAILABLE_CHARS[rand::random_range(0..AVAILABLE_CHARS_COUNT)])
     }
 }
 
 impl Mutate for GeneType {
     fn mutate(&mut self) {
         if rand::random_range(0.00..1.00) <= PM {
-            self.0 = !self.0
+            self.0 = AVAILABLE_CHARS[rand::random_range(0..AVAILABLE_CHARS_COUNT)]
         };
     }
 }
@@ -70,15 +81,12 @@ impl Individual for Chromosome {
     }
 
     fn calculate_fitness(&mut self) {
-        let fitness = {
-            let total_weight = total(&self.genes, WEIGHTS);
-            if total_weight <= MAX_WEIGHT {
-                total(&self.genes, VALUES)
-            } else {
-                0
-            }
-        };
-        self.fitness = Some(fitness);
+        let fitness = SENTENCE
+            .iter()
+            .zip(self.genes)
+            .filter(|(cw, cg)| **cw == cg.0)
+            .count();
+        self.fitness = Some(fitness as i32);
     }
 }
 
@@ -119,14 +127,15 @@ fn main() {
 
     sort_population_descending(&mut population);
     let best = &population[0];
-
+    let best_constructed_word: String = best.genes.iter().map(|g| g.0).collect();
     println!(
-        "Best result\nFitness: {}\nTotal weight: {}",
+        "Fitness: {}\nWord: {}",
         best.fitness.unwrap(),
-        total(&best.genes, WEIGHTS)
+        best_constructed_word
     );
 }
 
+/*
 fn total(genes: &[GeneType; ARRAYSIZE], array: [i32; ARRAYSIZE]) -> i32 {
     array
         .iter()
@@ -135,3 +144,4 @@ fn total(genes: &[GeneType; ARRAYSIZE], array: [i32; ARRAYSIZE]) -> i32 {
         .map(|(value, _)| value)
         .sum()
 }
+*/
