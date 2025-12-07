@@ -1,22 +1,34 @@
-use std::{array, fs};
+use std::{array, fs, sync::OnceLock};
+mod structures;
 mod words;
 use genetica::{
     crossover::single_point_crossover,
     individual::{Generate, Individual, Mutate},
     population::{generate_population, sort_population_descending},
 };
+use nlprule::{Rules, Tokenizer, rules_filename, tokenizer_filename};
 use serde::Deserialize;
 
-use crate::words::{
-    ADJECTIVES, ADJECTIVES_COUNT, ADVERBS, ADVERBS_COUNT, CONJUNCTIONS, CONJUNCTIONS_COUNT,
-    DETERMINERS, DETERMINERS_COUNT, NOUNS, NOUNS_COUNT, PREPOSITIONS, PREPOSITIONS_COUNT, VERBS,
-    VERBS_COUNT,
+use crate::{
+    structures::{
+        WORD_COUNT_STRUCTURE_EIGHT, WORD_COUNT_STRUCTURE_FIVE, WORD_COUNT_STRUCTURE_FOUR,
+        WORD_COUNT_STRUCTURE_SEVEN, WORD_COUNT_STRUCTURE_SIX, WORD_COUNT_STRUCTURE_THREE,
+    },
+    words::{
+        ADJECTIVES, ADJECTIVES_COUNT, ADVERBS, ADVERBS_COUNT, CONJUNCTIONS, CONJUNCTIONS_COUNT,
+        DETERMINERS, DETERMINERS_COUNT, NOUNS, NOUNS_COUNT, PREPOSITIONS, PREPOSITIONS_COUNT,
+        VERBS, VERBS_COUNT,
+    },
 };
+
+static TOKENIZER: OnceLock<Tokenizer> = OnceLock::new();
+static RULES: OnceLock<Rules> = OnceLock::new();
+static STRUCTURE: OnceLock<&[WordType]> = OnceLock::new();
 
 const PC: f32 = 0.6;
 const PM: f32 = 0.05;
 
-const WORD_COUNT: usize = 6;
+const WORD_COUNT: usize = 5;
 
 const NOUN_RATE: f32 = 0.30;
 const VERB_RATE: f32 = 0.20;
@@ -174,85 +186,22 @@ impl<'a> Individual for Chromosome<'a> {
     }
 
     fn calculate_fitness(&mut self) {
-        let mut fitness: f32 = 0.0;
-        let mut previous_word: Option<&WordType> = None;
-        let last_word = self.genes.last();
+        let tokenizer = TOKENIZER.get().unwrap();
+        let rules = RULES.get().unwrap();
+        let structure = STRUCTURE.get().unwrap();
 
-        self.genes.iter().for_each(|gt| {
-            let word_type = &gt.1;
-            if let Some(previous_word) = previous_word {
-                match word_type {
-                    WordType::Noun => match previous_word {
-                        WordType::Noun => {
-                            fitness -= 0.2;
-                        }
+        let sentence: String = self.genes.iter().map(|gt| gt.0).collect();
+        let suggestion_count = rules.suggest(&sentence, tokenizer).len() as f32;
+        let structure_error_count: f32 = structure
+            .iter()
+            .zip(self.genes)
+            .filter(|(wt, gt)| gt.1 != **wt)
+            .count() as f32;
 
-                        WordType::Adjective => {
-                            fitness += 0.2;
-                        }
-                        WordType::Conjunction => {
-                            fitness -= 0.05;
-                        }
-                        WordType::Adverb => {
-                            fitness -= 0.3;
-                        }
-                        WordType::Verb => {
-                            fitness -= 0.1;
-                        }
-                        WordType::Preposition | WordType::Determiner => fitness += 0.3,
-                    },
-                    WordType::Verb => match previous_word {
-                        WordType::Noun => {
-                            if gt.0.ends_with("ing") {
-                                fitness -= 0.1
-                            } else if gt.0.ends_with("ed") || gt.0.ends_with("pt") {
-                                fitness += 0.2
-                            } else {
-                                fitness += 0.1
-                            }
-                        }
-                        WordType::Adjective => fitness -= 0.1,
-                        _ => fitness -= 0.05,
-                    },
-                    WordType::Adverb => match previous_word {
-                        WordType::Verb => {
-                            fitness += 0.2;
-                        }
-                        WordType::Adverb => {
-                            fitness -= 0.1;
-                        }
-                        _ => fitness -= 0.1,
-                    },
-                    WordType::Adjective => match previous_word {
-                        WordType::Noun => fitness -= 0.2,
-                        _ => fitness += 0.1,
-                    },
-                    WordType::Conjunction => match previous_word {
-                        WordType::Noun => fitness += 0.1,
-                        WordType::Conjunction => fitness -= 0.3,
-                        _ => fitness -= 0.1,
-                    },
-                    WordType::Preposition => {}
-                    WordType::Determiner => {}
-                }
-            } else {
-                if word_type == &WordType::Noun {
-                    fitness += 0.5;
-                } else if word_type == &WordType::Adjective {
-                    fitness += 0.3;
-                } else {
-                    fitness -= 0.1;
-                }
-            }
-            previous_word = Some(word_type)
-        });
-        if let Some(last_word) = last_word {
-            match last_word.1 {
-                WordType::Conjunction => fitness -= 0.3,
-                WordType::Adverb => fitness -= 0.1,
-                _ => {}
-            }
-        };
+        let grammar_fitness: f32 = 0.3 * (1.0 / (suggestion_count + 1.0));
+        let structure_fitness: f32 = 0.7 * (1.0 / (structure_error_count + 1.0));
+        let fitness = grammar_fitness + structure_fitness;
+
         self.fitness = Some(fitness)
     }
 }
@@ -267,6 +216,26 @@ fn main() {
     let config_data = fs::read_to_string("config.toml").unwrap();
     let config: Config = toml::from_str(&config_data).unwrap();
 
+    let mut tokenizer_bytes: &'static [u8] =
+        include_bytes!(concat!(env!("OUT_DIR"), "/", tokenizer_filename!("en")));
+    let mut rules_bytes: &'static [u8] =
+        include_bytes!(concat!(env!("OUT_DIR"), "/", rules_filename!("en")));
+
+    let tokenizer =
+        Tokenizer::from_reader(&mut tokenizer_bytes).expect("tokenizer binary is valid");
+    let rules = Rules::from_reader(&mut rules_bytes).expect("rules binary is valid");
+    let structure: &[WordType] = match WORD_COUNT {
+        3 => &WORD_COUNT_STRUCTURE_THREE,
+        4 => &WORD_COUNT_STRUCTURE_FOUR,
+        5 => &WORD_COUNT_STRUCTURE_FIVE,
+        6 => &WORD_COUNT_STRUCTURE_SIX,
+        7 => &WORD_COUNT_STRUCTURE_SEVEN,
+        _ => &WORD_COUNT_STRUCTURE_EIGHT,
+    };
+    TOKENIZER.set(tokenizer).ok();
+    RULES.set(rules).ok();
+    STRUCTURE.set(structure).ok();
+
     let mut population: Vec<Chromosome> = generate_population(config.population_count);
 
     population.iter_mut().for_each(|c| c.calculate_fitness());
@@ -280,11 +249,12 @@ fn main() {
         child1.mutate_genes();
         child2.mutate_genes();
 
-        let mut new_population: Vec<Chromosome> = generate_population(config.population_count - 3);
+        let mut new_population: Vec<Chromosome> = generate_population(config.population_count - 4);
 
         new_population.push(child1);
         new_population.push(child2);
         new_population.push(*parent1);
+        new_population.push(*parent2);
 
         new_population
             .iter_mut()
@@ -306,14 +276,3 @@ fn main() {
         best_constructed_word
     );
 }
-
-/*
-fn total(genes: &[GeneType; ARRAYSIZE], array: [i32; ARRAYSIZE]) -> i32 {
-    array
-        .iter()
-        .zip(genes.iter())
-        .filter(|&(_, gene)| gene.0)
-        .map(|(value, _)| value)
-        .sum()
-}
-*/
