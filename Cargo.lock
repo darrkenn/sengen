@@ -7,9 +7,11 @@ name = "GA"
 version = "0.1.0"
 dependencies = [
  "genetica",
+ "lazy_static",
  "nlprule",
  "nlprule-build",
  "rand",
+ "rayon",
  "serde",
  "toml",
 ]

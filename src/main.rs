@@ -7,6 +7,7 @@ use genetica::{
     population::{generate_population, sort_population_descending},
 };
 use nlprule::{Rules, Tokenizer, rules_filename, tokenizer_filename};
+use rayon::iter::{IntoParallelRefMutIterator, ParallelIterator};
 use serde::Deserialize;
 
 use crate::{
@@ -28,7 +29,7 @@ static STRUCTURE: OnceLock<&[WordType]> = OnceLock::new();
 const PC: f32 = 0.6;
 const PM: f32 = 0.05;
 
-const WORD_COUNT: usize = 5;
+const WORD_COUNT: usize = 4;
 
 const NOUN_RATE: f32 = 0.30;
 const VERB_RATE: f32 = 0.20;
@@ -56,17 +57,23 @@ impl<'a> Generate for GeneType<'a> {
         let random_f32: f32 = rand::random_range(0.00..1.00);
         //This seems stupid
         let (word, word_type) = if random_f32 <= NOUN_RATE {
-            (NOUNS[rand::random_range(0..NOUNS_COUNT)], WordType::Noun)
+            (
+                NOUNS[rand::random_range(0..*NOUNS_COUNT)].as_str(),
+                WordType::Noun,
+            )
         } else if random_f32 <= (NOUN_RATE + VERB_RATE) {
-            (VERBS[rand::random_range(0..VERBS_COUNT)], WordType::Verb)
+            (
+                VERBS[rand::random_range(0..*VERBS_COUNT)].as_str(),
+                WordType::Verb,
+            )
         } else if random_f32 <= (NOUN_RATE + VERB_RATE + ADVERB_RATE) {
             (
-                ADVERBS[rand::random_range(0..ADVERBS_COUNT)],
+                ADVERBS[rand::random_range(0..*ADVERBS_COUNT)].as_str(),
                 WordType::Adverb,
             )
         } else if random_f32 <= (NOUN_RATE + VERB_RATE + ADVERB_RATE + ADJECTIVE_RATE) {
             (
-                ADJECTIVES[rand::random_range(0..ADJECTIVES_COUNT)],
+                ADJECTIVES[rand::random_range(0..*ADJECTIVES_COUNT)].as_str(),
                 WordType::Adjective,
             )
         } else if random_f32
@@ -104,17 +111,23 @@ impl<'a> Mutate for GeneType<'a> {
             let random_f32: f32 = rand::random_range(0.00..1.00);
 
             let (word, word_type) = if random_f32 <= NOUN_RATE {
-                (NOUNS[rand::random_range(0..NOUNS_COUNT)], WordType::Noun)
+                (
+                    NOUNS[rand::random_range(0..*NOUNS_COUNT)].as_str(),
+                    WordType::Noun,
+                )
             } else if random_f32 <= (NOUN_RATE + VERB_RATE) {
-                (VERBS[rand::random_range(0..VERBS_COUNT)], WordType::Verb)
+                (
+                    VERBS[rand::random_range(0..*VERBS_COUNT)].as_str(),
+                    WordType::Verb,
+                )
             } else if random_f32 <= (NOUN_RATE + VERB_RATE + ADVERB_RATE) {
                 (
-                    ADVERBS[rand::random_range(0..ADVERBS_COUNT)],
+                    ADVERBS[rand::random_range(0..*ADVERBS_COUNT)].as_str(),
                     WordType::Adverb,
                 )
             } else if random_f32 <= (NOUN_RATE + VERB_RATE + ADVERB_RATE + ADJECTIVE_RATE) {
                 (
-                    ADJECTIVES[rand::random_range(0..ADJECTIVES_COUNT)],
+                    ADJECTIVES[rand::random_range(0..*ADJECTIVES_COUNT)].as_str(),
                     WordType::Adjective,
                 )
             } else if random_f32
@@ -198,8 +211,8 @@ impl<'a> Individual for Chromosome<'a> {
             .filter(|(wt, gt)| gt.1 != **wt)
             .count() as f32;
 
-        let grammar_fitness: f32 = 0.3 * (1.0 / (suggestion_count + 1.0));
-        let structure_fitness: f32 = 0.7 * (1.0 / (structure_error_count + 1.0));
+        let grammar_fitness: f32 = 0.5 * (1.0 / (suggestion_count + 1.0));
+        let structure_fitness: f32 = 0.5 * (1.0 / (structure_error_count + 1.0));
         let fitness = grammar_fitness + structure_fitness;
 
         self.fitness = Some(fitness)
@@ -225,7 +238,10 @@ fn main() {
         Tokenizer::from_reader(&mut tokenizer_bytes).expect("tokenizer binary is valid");
     let rules = Rules::from_reader(&mut rules_bytes).expect("rules binary is valid");
     let structure: &[WordType] = match WORD_COUNT {
-        3 => &WORD_COUNT_STRUCTURE_THREE,
+        3 => {
+            let rand_num = rand::random_range(0..=1);
+            &WORD_COUNT_STRUCTURE_THREE[rand_num]
+        }
         4 => &WORD_COUNT_STRUCTURE_FOUR,
         5 => &WORD_COUNT_STRUCTURE_FIVE,
         6 => &WORD_COUNT_STRUCTURE_SIX,
@@ -238,7 +254,9 @@ fn main() {
 
     let mut population: Vec<Chromosome> = generate_population(config.population_count);
 
-    population.iter_mut().for_each(|c| c.calculate_fitness());
+    population
+        .par_iter_mut()
+        .for_each(|c| c.calculate_fitness());
 
     for _ in 0..config.generations {
         sort_population_descending(&mut population);
@@ -257,7 +275,7 @@ fn main() {
         new_population.push(*parent2);
 
         new_population
-            .iter_mut()
+            .par_iter_mut()
             .for_each(|c| c.calculate_fitness());
         population = new_population
     }

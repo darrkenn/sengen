@@ -1,7 +1,9 @@
 use crate::WordType;
 
-pub const WORD_COUNT_STRUCTURE_THREE: [WordType; 3] =
-    [WordType::Noun, WordType::Verb, WordType::Noun];
+pub const WORD_COUNT_STRUCTURE_THREE: [[WordType; 3]; 2] = [
+    [WordType::Noun, WordType::Verb, WordType::Noun],
+    [WordType::Determiner, WordType::Noun, WordType::Verb],
+];
 pub const WORD_COUNT_STRUCTURE_FOUR: [WordType; 4] = [
     WordType::Adjective,
     WordType::Noun,
