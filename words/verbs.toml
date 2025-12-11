@@ -1,0 +1,10 @@
+verbs = [
+  { past = "jumped", present = "jumping", future = "jump" },
+  { past = "walked", present = "walking", future = "walk" },
+  { past = "talked", present = "talking", future = "talk" },
+  { past = "attacked", present = "attacking", future = "attack" },
+  { past = "ran", present = "run", future = "run" },
+  { past = "slept", present = "sleeping", future = "sleeping" },
+  { past = "programmed", present = "programming", future = "program" },
+  { past = "imagined", present = "imagining", future = "imagine" },
+]

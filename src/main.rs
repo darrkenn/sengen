@@ -15,9 +15,9 @@ use crate::{
         WORD_COUNT_STRUCTURE_SEVEN, WORD_COUNT_STRUCTURE_SIX, WORD_COUNT_STRUCTURE_THREE,
     },
     words::{
-        ADJECTIVES, ADJECTIVES_COUNT, ADVERBS, ADVERBS_COUNT, CONJUNCTIONS, CONJUNCTIONS_COUNT,
-        DETERMINERS, DETERMINERS_COUNT, NOUNS, NOUNS_COUNT, PREPOSITIONS, PREPOSITIONS_COUNT,
-        VERBS, VERBS_COUNT,
+        ADJECTIVES, ADJECTIVES_COUNT, ADVERBS, ADVERBS_COUNT, AdjectiveType, CONJUNCTIONS,
+        CONJUNCTIONS_COUNT, DETERMINERS, DETERMINERS_COUNT, NOUNS, NOUNS_COUNT, PREPOSITIONS,
+        PREPOSITIONS_COUNT, VERBS, VERBS_COUNT,
     },
 };
 
@@ -28,8 +28,10 @@ const PC: f32 = 0.6;
 //Mutation probability
 const PM: f32 = 0.05;
 
+// Sentence length
 const WORD_COUNT: usize = 4;
 
+// Word type rates
 const NOUN_RATE: f32 = 0.30;
 const VERB_RATE: f32 = 0.20;
 const ADVERB_RATE: f32 = 0.10;
@@ -37,7 +39,19 @@ const ADJECTIVE_RATE: f32 = 0.10;
 const PREPOSITION_RATE: f32 = 0.10;
 const DETERMINER_RATE: f32 = 0.10;
 
-const PLURAL_NOUN_RATE: f32 = 0.30;
+// Noun type rates
+const NOUN_PLURAL_RATE: f32 = 0.30;
+// Verb type rates
+const VERB_PAST_TENSE_RATE: f32 = 0.33;
+const VERB_PRESENT_TENSE_RATE: f32 = 0.33;
+// Adjective type rates (Minimum is 0.125)
+const ADJ_INTERROGATIVE_RATE: f32 = 0.125;
+const ADJ_DISTRIBUTIVE_RATE: f32 = 0.125;
+const ADJ_NUMERAL_RATE: f32 = 0.125;
+const ADJ_PROPER_RATE: f32 = 0.125;
+const ADJ_DESCRIPTIVE_RATE: f32 = 0.125;
+const ADJ_POSSESIVE_RATE: f32 = 0.125;
+const ADJ_QUANTATIVE_RATE: f32 = 0.125;
 
 #[derive(Debug, Clone, Copy, PartialEq)]
 enum WordType {
@@ -53,123 +67,132 @@ enum WordType {
 #[derive(Debug, Clone, Copy, PartialEq)]
 struct GeneType<'a>(pub &'a str, pub WordType);
 
+fn select_word<'a>() -> GeneType<'a> {
+    let random_f32: f32 = rand::random_range(0.00..1.00);
+    let (word, word_type) = if random_f32 <= NOUN_RATE {
+        let noun = &NOUNS[rand::random_range(0..*NOUNS_COUNT)];
+        let word = if rand::random_range(0.00..1.00) <= NOUN_PLURAL_RATE && noun.plural.is_some() {
+            noun.plural.as_ref().unwrap().as_str()
+        } else {
+            noun.singular.as_str()
+        };
+
+        (word, WordType::Noun)
+    } else if random_f32 <= (NOUN_RATE + VERB_RATE) {
+        let verb = &VERBS[rand::random_range(0..*VERBS_COUNT)];
+        let tense_num = rand::random_range(0.00..1.00);
+        let word = if tense_num <= VERB_PAST_TENSE_RATE {
+            verb.past.as_str()
+        } else if tense_num <= VERB_PAST_TENSE_RATE + VERB_PRESENT_TENSE_RATE {
+            verb.present.as_str()
+        } else {
+            verb.future.as_str()
+        };
+
+        (word, WordType::Verb)
+    } else if random_f32 <= (NOUN_RATE + VERB_RATE + ADVERB_RATE) {
+        (
+            ADVERBS[rand::random_range(0..*ADVERBS_COUNT)].as_str(),
+            WordType::Adverb,
+        )
+    } else if random_f32 <= (NOUN_RATE + VERB_RATE + ADVERB_RATE + ADJECTIVE_RATE) {
+        let type_num = rand::random_range(0.00..1.00);
+        // Holy shit this is so stupid
+        let adjective_type = match type_num {
+            n if n <= ADJ_INTERROGATIVE_RATE => AdjectiveType::Interrogative,
+            n if n <= ADJ_INTERROGATIVE_RATE + ADJ_DISTRIBUTIVE_RATE => AdjectiveType::Distributive,
+            n if n <= ADJ_INTERROGATIVE_RATE + ADJ_DISTRIBUTIVE_RATE + ADJ_NUMERAL_RATE => {
+                AdjectiveType::Numeral
+            }
+            n if n
+                <= ADJ_INTERROGATIVE_RATE
+                    + ADJ_DISTRIBUTIVE_RATE
+                    + ADJ_NUMERAL_RATE
+                    + ADJ_PROPER_RATE =>
+            {
+                AdjectiveType::Proper
+            }
+            n if n
+                <= ADJ_INTERROGATIVE_RATE
+                    + ADJ_DISTRIBUTIVE_RATE
+                    + ADJ_NUMERAL_RATE
+                    + ADJ_PROPER_RATE
+                    + ADJ_DESCRIPTIVE_RATE =>
+            {
+                AdjectiveType::Descriptive
+            }
+            n if n
+                <= ADJ_INTERROGATIVE_RATE
+                    + ADJ_DISTRIBUTIVE_RATE
+                    + ADJ_NUMERAL_RATE
+                    + ADJ_PROPER_RATE
+                    + ADJ_DESCRIPTIVE_RATE
+                    + ADJ_QUANTATIVE_RATE =>
+            {
+                AdjectiveType::Quantative
+            }
+            _ => AdjectiveType::Demonstrative,
+        };
+        let word = ADJECTIVES
+            .iter()
+            .find(|adj| adj.adjective_type == adjective_type)
+            .unwrap_or(&ADJECTIVES[rand::random_range(0..*ADJECTIVES_COUNT)])
+            .word
+            .as_str();
+
+        (word, WordType::Adjective)
+    } else if random_f32
+        <= (NOUN_RATE + VERB_RATE + ADVERB_RATE + ADJECTIVE_RATE + PREPOSITION_RATE)
+    {
+        (
+            PREPOSITIONS[rand::random_range(0..PREPOSITIONS_COUNT)],
+            WordType::Preposition,
+        )
+    } else if random_f32
+        <= (NOUN_RATE
+            + VERB_RATE
+            + ADVERB_RATE
+            + ADJECTIVE_RATE
+            + PREPOSITION_RATE
+            + DETERMINER_RATE)
+    {
+        (
+            DETERMINERS[rand::random_range(0..DETERMINERS_COUNT)],
+            WordType::Determiner,
+        )
+    } else {
+        (
+            CONJUNCTIONS[rand::random_range(0..CONJUNCTIONS_COUNT)],
+            WordType::Conjunction,
+        )
+    };
+    GeneType(word, word_type)
+}
+
+fn capitalize(word: &str) -> String {
+    let mut chars = word.chars();
+    match chars.next() {
+        None => String::new(),
+        Some(fl) => {
+            let mut capitalized_word = String::new();
+            capitalized_word.push(fl.to_ascii_uppercase());
+            capitalized_word.extend(chars);
+            capitalized_word
+        }
+    }
+}
 impl<'a> Generate for GeneType<'a> {
     fn generate() -> Self {
-        let random_f32: f32 = rand::random_range(0.00..1.00);
-        //This seems stupid
-        let (word, word_type) = if random_f32 <= NOUN_RATE {
-            let noun = &NOUNS[rand::random_range(0..*NOUNS_COUNT)];
-            let word =
-                if rand::random_range(0.00..1.00) <= PLURAL_NOUN_RATE && noun.plural.is_some() {
-                    noun.plural.as_ref().unwrap().as_str()
-                } else {
-                    noun.singular.as_str()
-                };
-
-            (word, WordType::Noun)
-        } else if random_f32 <= (NOUN_RATE + VERB_RATE) {
-            (
-                VERBS[rand::random_range(0..*VERBS_COUNT)].as_str(),
-                WordType::Verb,
-            )
-        } else if random_f32 <= (NOUN_RATE + VERB_RATE + ADVERB_RATE) {
-            (
-                ADVERBS[rand::random_range(0..*ADVERBS_COUNT)].as_str(),
-                WordType::Adverb,
-            )
-        } else if random_f32 <= (NOUN_RATE + VERB_RATE + ADVERB_RATE + ADJECTIVE_RATE) {
-            (
-                ADJECTIVES[rand::random_range(0..*ADJECTIVES_COUNT)].as_str(),
-                WordType::Adjective,
-            )
-        } else if random_f32
-            <= (NOUN_RATE + VERB_RATE + ADVERB_RATE + ADJECTIVE_RATE + PREPOSITION_RATE)
-        {
-            (
-                PREPOSITIONS[rand::random_range(0..PREPOSITIONS_COUNT)],
-                WordType::Preposition,
-            )
-        } else if random_f32
-            <= (NOUN_RATE
-                + VERB_RATE
-                + ADVERB_RATE
-                + ADJECTIVE_RATE
-                + PREPOSITION_RATE
-                + DETERMINER_RATE)
-        {
-            (
-                DETERMINERS[rand::random_range(0..DETERMINERS_COUNT)],
-                WordType::Determiner,
-            )
-        } else {
-            (
-                CONJUNCTIONS[rand::random_range(0..CONJUNCTIONS_COUNT)],
-                WordType::Conjunction,
-            )
-        };
-        GeneType(word, word_type)
+        select_word()
     }
 }
 
 impl<'a> Mutate for GeneType<'a> {
     fn mutate(&mut self) {
         if rand::random_range(0.00..1.00) <= PM {
-            let random_f32: f32 = rand::random_range(0.00..1.00);
-
-            let (word, word_type) = if random_f32 <= NOUN_RATE {
-                let noun = &NOUNS[rand::random_range(0..*NOUNS_COUNT)];
-                let word = if rand::random_range(0.00..1.00) <= PLURAL_NOUN_RATE
-                    && noun.plural.is_some()
-                {
-                    noun.plural.as_ref().unwrap().as_str()
-                } else {
-                    noun.singular.as_str()
-                };
-
-                (word, WordType::Noun)
-            } else if random_f32 <= (NOUN_RATE + VERB_RATE) {
-                (
-                    VERBS[rand::random_range(0..*VERBS_COUNT)].as_str(),
-                    WordType::Verb,
-                )
-            } else if random_f32 <= (NOUN_RATE + VERB_RATE + ADVERB_RATE) {
-                (
-                    ADVERBS[rand::random_range(0..*ADVERBS_COUNT)].as_str(),
-                    WordType::Adverb,
-                )
-            } else if random_f32 <= (NOUN_RATE + VERB_RATE + ADVERB_RATE + ADJECTIVE_RATE) {
-                (
-                    ADJECTIVES[rand::random_range(0..*ADJECTIVES_COUNT)].as_str(),
-                    WordType::Adjective,
-                )
-            } else if random_f32
-                <= (NOUN_RATE + VERB_RATE + ADVERB_RATE + ADJECTIVE_RATE + PREPOSITION_RATE)
-            {
-                (
-                    PREPOSITIONS[rand::random_range(0..PREPOSITIONS_COUNT)],
-                    WordType::Preposition,
-                )
-            } else if random_f32
-                <= (NOUN_RATE
-                    + VERB_RATE
-                    + ADVERB_RATE
-                    + ADJECTIVE_RATE
-                    + PREPOSITION_RATE
-                    + DETERMINER_RATE)
-            {
-                (
-                    DETERMINERS[rand::random_range(0..DETERMINERS_COUNT)],
-                    WordType::Determiner,
-                )
-            } else {
-                (
-                    CONJUNCTIONS[rand::random_range(0..CONJUNCTIONS_COUNT)],
-                    WordType::Conjunction,
-                )
-            };
-
-            self.0 = word;
-            self.1 = word_type;
+            let selected_word = select_word();
+            self.0 = selected_word.0;
+            self.1 = selected_word.1;
         };
     }
 }
@@ -234,6 +257,12 @@ struct Config {
 fn main() {
     let config_data = fs::read_to_string("config.toml").unwrap();
     let config: Config = toml::from_str(&config_data).unwrap();
+
+    let word_rate_count =
+        NOUN_RATE + VERB_RATE + ADVERB_RATE + ADJECTIVE_RATE + PREPOSITION_RATE + DETERMINER_RATE;
+    if word_rate_count >= 100.00 {
+        println!("Word rate count is greater than 100: {word_rate_count}");
+    };
 
     let structure: &[WordType] = match WORD_COUNT {
         3 => {

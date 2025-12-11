@@ -1,14 +1,51 @@
 use lazy_static::lazy_static;
 use serde::Deserialize;
 
+#[derive(Deserialize, PartialEq)]
+pub enum AdjectiveType {
+    Interrogative,
+    Distributive,
+    Numeral,
+    Proper,
+    Descriptive,
+    Possessive,
+    Quantative,
+    Demonstrative,
+}
+
 #[derive(Deserialize)]
 pub struct Noun {
     pub singular: String,
     pub plural: Option<String>,
+    pub proper: Option<bool>,
 }
+#[derive(Deserialize)]
+pub struct Verb {
+    pub past: String,
+    pub present: String,
+    pub future: String,
+}
+#[derive(Deserialize)]
+pub struct Adjective {
+    pub word: String,
+    pub adjective_type: AdjectiveType,
+}
+
 #[derive(Deserialize)]
 struct Nouns {
     pub nouns: Vec<Noun>,
+}
+#[derive(Deserialize)]
+struct Verbs {
+    pub verbs: Vec<Verb>,
+}
+#[derive(Deserialize)]
+struct Adverbs {
+    pub adverbs: Vec<String>,
+}
+#[derive(Deserialize)]
+struct Adjectives {
+    pub adjectives: Vec<Adjective>,
 }
 
 lazy_static! {
@@ -18,34 +55,22 @@ lazy_static! {
         nouns.nouns
     };
     pub static ref NOUNS_COUNT: usize = NOUNS.len();
-    pub static ref VERBS: Vec<String> = {
-        let content = include_str!("../words/verbs.txt");
-        let verbs_vec = content
-            .lines()
-            .filter(|line| !line.is_empty())
-            .map(|line| line.trim().to_string())
-            .collect();
-        verbs_vec
+    pub static ref VERBS: Vec<Verb> = {
+        let content = include_str!("../words/verbs.toml");
+        let verbs: Verbs = toml::from_str(&content).unwrap();
+        verbs.verbs
     };
     pub static ref VERBS_COUNT: usize = VERBS.len();
     pub static ref ADVERBS: Vec<String> = {
-        let content = include_str!("../words/adverbs.txt");
-        let adverbs_vec = content
-            .lines()
-            .filter(|line| !line.is_empty())
-            .map(|line| line.trim().to_string())
-            .collect();
-        adverbs_vec
+        let content = include_str!("../words/adverbs.toml");
+        let adverbs: Adverbs = toml::from_str(&content).unwrap();
+        adverbs.adverbs
     };
     pub static ref ADVERBS_COUNT: usize = ADVERBS.len();
-    pub static ref ADJECTIVES: Vec<String> = {
-        let content = include_str!("../words/adjectives.txt");
-        let adjectives_vec = content
-            .lines()
-            .filter(|line| !line.is_empty())
-            .map(|line| line.trim().to_string())
-            .collect();
-        adjectives_vec
+    pub static ref ADJECTIVES: Vec<Adjective> = {
+        let content = include_str!("../words/adjectives.toml");
+        let adjectives: Adjectives = toml::from_str(&content).unwrap();
+        adjectives.adjectives
     };
     pub static ref ADJECTIVES_COUNT: usize = ADJECTIVES.len();
 }
