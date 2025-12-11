@@ -1,0 +1,13 @@
+nouns = [
+  {singular = "cat", plural = "cats"},
+  {singular = "blueberry", plural = "blueberries"},
+  {singular = "sprinkle", plural = "sprinkles"},
+  {singular = "france"},
+  {singular = "dog", plural = "dogs"},
+  {singular = "apple", plural = "apples"},
+  {singular = "river", plural = "rivers"},
+  {singular = "computer", plural = "computers"},
+  {singular = "idea", plural = "ideas"}
+]
+
+

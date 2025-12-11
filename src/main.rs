@@ -6,7 +6,6 @@ use genetica::{
     individual::{Generate, Individual, Mutate},
     population::{generate_population, sort_population_descending},
 };
-use nlprule::{Rules, Tokenizer, rules_filename, tokenizer_filename};
 use rayon::iter::{IntoParallelRefMutIterator, ParallelIterator};
 use serde::Deserialize;
 
@@ -22,11 +21,11 @@ use crate::{
     },
 };
 
-static TOKENIZER: OnceLock<Tokenizer> = OnceLock::new();
-static RULES: OnceLock<Rules> = OnceLock::new();
 static STRUCTURE: OnceLock<&[WordType]> = OnceLock::new();
 
+//Crossover probability
 const PC: f32 = 0.6;
+//Mutation probability
 const PM: f32 = 0.05;
 
 const WORD_COUNT: usize = 4;
@@ -37,6 +36,8 @@ const ADVERB_RATE: f32 = 0.10;
 const ADJECTIVE_RATE: f32 = 0.10;
 const PREPOSITION_RATE: f32 = 0.10;
 const DETERMINER_RATE: f32 = 0.10;
+
+const PLURAL_NOUN_RATE: f32 = 0.30;
 
 #[derive(Debug, Clone, Copy, PartialEq)]
 enum WordType {
@@ -57,10 +58,15 @@ impl<'a> Generate for GeneType<'a> {
         let random_f32: f32 = rand::random_range(0.00..1.00);
         //This seems stupid
         let (word, word_type) = if random_f32 <= NOUN_RATE {
-            (
-                NOUNS[rand::random_range(0..*NOUNS_COUNT)].as_str(),
-                WordType::Noun,
-            )
+            let noun = &NOUNS[rand::random_range(0..*NOUNS_COUNT)];
+            let word =
+                if rand::random_range(0.00..1.00) <= PLURAL_NOUN_RATE && noun.plural.is_some() {
+                    noun.plural.as_ref().unwrap().as_str()
+                } else {
+                    noun.singular.as_str()
+                };
+
+            (word, WordType::Noun)
         } else if random_f32 <= (NOUN_RATE + VERB_RATE) {
             (
                 VERBS[rand::random_range(0..*VERBS_COUNT)].as_str(),
@@ -111,10 +117,16 @@ impl<'a> Mutate for GeneType<'a> {
             let random_f32: f32 = rand::random_range(0.00..1.00);
 
             let (word, word_type) = if random_f32 <= NOUN_RATE {
-                (
-                    NOUNS[rand::random_range(0..*NOUNS_COUNT)].as_str(),
-                    WordType::Noun,
-                )
+                let noun = &NOUNS[rand::random_range(0..*NOUNS_COUNT)];
+                let word = if rand::random_range(0.00..1.00) <= PLURAL_NOUN_RATE
+                    && noun.plural.is_some()
+                {
+                    noun.plural.as_ref().unwrap().as_str()
+                } else {
+                    noun.singular.as_str()
+                };
+
+                (word, WordType::Noun)
             } else if random_f32 <= (NOUN_RATE + VERB_RATE) {
                 (
                     VERBS[rand::random_range(0..*VERBS_COUNT)].as_str(),
@@ -199,21 +211,15 @@ impl<'a> Individual for Chromosome<'a> {
     }
 
     fn calculate_fitness(&mut self) {
-        let tokenizer = TOKENIZER.get().unwrap();
-        let rules = RULES.get().unwrap();
         let structure = STRUCTURE.get().unwrap();
-
-        let sentence: String = self.genes.iter().map(|gt| gt.0).collect();
-        let suggestion_count = rules.suggest(&sentence, tokenizer).len() as f32;
         let structure_error_count: f32 = structure
             .iter()
             .zip(self.genes)
             .filter(|(wt, gt)| gt.1 != **wt)
             .count() as f32;
 
-        let grammar_fitness: f32 = 0.5 * (1.0 / (suggestion_count + 1.0));
-        let structure_fitness: f32 = 0.5 * (1.0 / (structure_error_count + 1.0));
-        let fitness = grammar_fitness + structure_fitness;
+        let structure_fitness: f32 = 1.0 * (1.0 / (structure_error_count + 1.0));
+        let fitness = structure_fitness;
 
         self.fitness = Some(fitness)
     }
@@ -229,14 +235,6 @@ fn main() {
     let config_data = fs::read_to_string("config.toml").unwrap();
     let config: Config = toml::from_str(&config_data).unwrap();
 
-    let mut tokenizer_bytes: &'static [u8] =
-        include_bytes!(concat!(env!("OUT_DIR"), "/", tokenizer_filename!("en")));
-    let mut rules_bytes: &'static [u8] =
-        include_bytes!(concat!(env!("OUT_DIR"), "/", rules_filename!("en")));
-
-    let tokenizer =
-        Tokenizer::from_reader(&mut tokenizer_bytes).expect("tokenizer binary is valid");
-    let rules = Rules::from_reader(&mut rules_bytes).expect("rules binary is valid");
     let structure: &[WordType] = match WORD_COUNT {
         3 => {
             let rand_num = rand::random_range(0..=1);
@@ -248,8 +246,6 @@ fn main() {
         7 => &WORD_COUNT_STRUCTURE_SEVEN,
         _ => &WORD_COUNT_STRUCTURE_EIGHT,
     };
-    TOKENIZER.set(tokenizer).ok();
-    RULES.set(rules).ok();
     STRUCTURE.set(structure).ok();
 
     let mut population: Vec<Chromosome> = generate_population(config.population_count);

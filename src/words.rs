@@ -1,15 +1,21 @@
 use lazy_static::lazy_static;
+use serde::Deserialize;
+
+#[derive(Deserialize)]
+pub struct Noun {
+    pub singular: String,
+    pub plural: Option<String>,
+}
+#[derive(Deserialize)]
+struct Nouns {
+    pub nouns: Vec<Noun>,
+}
 
 lazy_static! {
-    pub static ref NOUNS: Vec<String> = {
-        let content = include_str!("../words/nouns.txt");
-
-        let nouns_vec = content
-            .lines()
-            .filter(|line| !line.is_empty())
-            .map(|line| line.trim().to_string())
-            .collect();
-        nouns_vec
+    pub static ref NOUNS: Vec<Noun> = {
+        let content = include_str!("../words/nouns.toml");
+        let nouns: Nouns = toml::from_str(&content).unwrap();
+        nouns.nouns
     };
     pub static ref NOUNS_COUNT: usize = NOUNS.len();
     pub static ref VERBS: Vec<String> = {
