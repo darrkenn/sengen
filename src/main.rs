@@ -24,7 +24,7 @@ use crate::{
 static STRUCTURE: OnceLock<&[WordType]> = OnceLock::new();
 
 //Crossover probability
-const PC: f32 = 0.6;
+const PC: f32 = 0.5;
 //Mutation probability
 const PM: f32 = 0.05;
 
@@ -131,6 +131,17 @@ fn select_word<'a>() -> GeneType<'a> {
             {
                 AdjectiveType::Quantative
             }
+            n if n
+                <= ADJ_INTERROGATIVE_RATE
+                    + ADJ_DISTRIBUTIVE_RATE
+                    + ADJ_NUMERAL_RATE
+                    + ADJ_PROPER_RATE
+                    + ADJ_DESCRIPTIVE_RATE
+                    + ADJ_QUANTATIVE_RATE
+                    + ADJ_POSSESIVE_RATE =>
+            {
+                AdjectiveType::Possessive
+            }
             _ => AdjectiveType::Demonstrative,
         };
         let word = ADJECTIVES
@@ -169,18 +180,6 @@ fn select_word<'a>() -> GeneType<'a> {
     GeneType(word, word_type)
 }
 
-fn capitalize(word: &str) -> String {
-    let mut chars = word.chars();
-    match chars.next() {
-        None => String::new(),
-        Some(fl) => {
-            let mut capitalized_word = String::new();
-            capitalized_word.push(fl.to_ascii_uppercase());
-            capitalized_word.extend(chars);
-            capitalized_word
-        }
-    }
-}
 impl<'a> Generate for GeneType<'a> {
     fn generate() -> Self {
         select_word()
@@ -307,15 +306,30 @@ fn main() {
 
     sort_population_descending(&mut population);
     let best = &population[0];
-    let best_constructed_word = best
+    let sentence = construct_sentence(best);
+    println!("Fitness: {}\nWord: {}", best.fitness.unwrap(), sentence);
+}
+
+fn construct_sentence(chromosome: &Chromosome) -> String {
+    let mut words = chromosome
         .genes
         .iter()
         .map(|g| g.0.to_string())
-        .collect::<Vec<String>>()
-        .join(" ");
-    println!(
-        "Fitness: {}\nWord: {}.",
-        best.fitness.unwrap(),
-        best_constructed_word
-    );
+        .collect::<Vec<String>>();
+    words[0] = capitalize(&words[0]);
+    let mut sentence = words.join(" ");
+    sentence.push_str(".");
+    sentence
+}
+fn capitalize(word: &str) -> String {
+    let mut chars = word.chars();
+    match chars.next() {
+        None => String::new(),
+        Some(fl) => {
+            let mut capitalized_word = String::new();
+            capitalized_word.push(fl.to_ascii_uppercase());
+            capitalized_word.extend(chars);
+            capitalized_word
+        }
+    }
 }

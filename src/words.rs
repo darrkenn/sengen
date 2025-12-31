@@ -17,7 +17,7 @@ pub enum AdjectiveType {
 pub struct Noun {
     pub singular: String,
     pub plural: Option<String>,
-    pub proper: Option<bool>,
+    pub proper: bool,
 }
 #[derive(Deserialize)]
 pub struct Verb {
