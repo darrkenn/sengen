@@ -80,6 +80,7 @@ adjectives = [
   { word = "triple", adjective_type = "Quantative" },
   { word = "all", adjective_type = "Quantative" },
   { word = "every", adjective_type = "Quantative" },
+  # Demonstrative
   { word = "this", adjective_type = "Demonstrative" },
   { word = "that", adjective_type = "Demonstrative" },
   { word = "these", adjective_type = "Demonstrative" },

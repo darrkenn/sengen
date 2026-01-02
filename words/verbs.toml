@@ -7,4 +7,5 @@ verbs = [
   { past = "slept", present = "sleeping", future = "sleeping" },
   { past = "programmed", present = "programming", future = "program" },
   { past = "imagined", present = "imagining", future = "imagine" },
+  { past = "was", present = "is", future = "will be" },
 ]

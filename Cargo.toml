@@ -1,12 +1,12 @@
 [package]
-name = "GA"
+name = "sengen"
 version = "0.1.0"
 edition = "2024"
 
 [dependencies]
 genetica = "1.0.1"
 rand = "0.9.2"
-serde = {version ="1.0.228", features = ["derive"]}
+serde = { version = "1.0.228", features = ["derive"] }
 toml = "0.9.8"
 rayon = "1.11.0"
 lazy_static = "1.5.0"
@@ -21,7 +21,7 @@ codegen-units = 32
 
 [profile.release]
 opt-level = 3
-debug = false 
+debug = false
 strip = true
 debug-assertions = false
 overflow-checks = false

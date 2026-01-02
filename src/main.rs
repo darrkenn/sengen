@@ -29,7 +29,7 @@ const PC: f32 = 0.5;
 const PM: f32 = 0.05;
 
 // Sentence length
-const WORD_COUNT: usize = 4;
+const WORD_COUNT: usize = 5;
 
 // Word type rates
 const NOUN_RATE: f32 = 0.30;
@@ -269,7 +269,10 @@ fn main() {
             &WORD_COUNT_STRUCTURE_THREE[rand_num]
         }
         4 => &WORD_COUNT_STRUCTURE_FOUR,
-        5 => &WORD_COUNT_STRUCTURE_FIVE,
+        5 => {
+            let rand_num = rand::random_range(0..=3);
+            &WORD_COUNT_STRUCTURE_FIVE[rand_num]
+        }
         6 => &WORD_COUNT_STRUCTURE_SIX,
         7 => &WORD_COUNT_STRUCTURE_SEVEN,
         _ => &WORD_COUNT_STRUCTURE_EIGHT,
