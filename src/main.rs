@@ -1,5 +1,7 @@
 use crate::{
-    rates::{AdjectiveTypeRates, NounTypeRates, Rates, VerbTypeRates, WordTypeRates},
+    rates::{
+        AdjectiveTypeRates, AdverbTypeRates, NounTypeRates, Rates, VerbTypeRates, WordTypeRates,
+    },
     structures::{
         WORD_COUNT_STRUCTURE_EIGHT, WORD_COUNT_STRUCTURE_FIVE, WORD_COUNT_STRUCTURE_FOUR,
         WORD_COUNT_STRUCTURE_SEVEN, WORD_COUNT_STRUCTURE_SIX, WORD_COUNT_STRUCTURE_THREE,
@@ -17,7 +19,7 @@ mod structures;
 mod words;
 
 lazy_static! {
-    static ref CONFIG: Config = {
+    pub static ref CONFIG: Config = {
         let config_string = match fs::read_to_string("config.toml") {
             Ok(cs) => cs,
             Err(e) => {
@@ -33,7 +35,7 @@ lazy_static! {
             }
         }
     };
-    static ref STRUCTURE: &'static [WordType] = {
+    pub static ref STRUCTURE: &'static [WordType] = {
         if CONFIG.use_structure_fitness {
             let structure: &[WordType] = match CONFIG.word_count {
                 3 => &WORD_COUNT_STRUCTURE_THREE[rand::random_range(0..=1)],
@@ -62,6 +64,7 @@ pub struct Config {
     pub word_type_rates: WordTypeRates,
     pub noun_type_rates: NounTypeRates,
     pub verb_type_rates: VerbTypeRates,
+    pub adverb_type_rates: AdverbTypeRates,
     pub adjective_type_rates: AdjectiveTypeRates,
 }
 
@@ -93,6 +96,12 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     if !CONFIG.verb_type_rates.add_up() {
         eprintln!(
             "Verb type rates don't add up to be under 1.00. Total = {}",
+            CONFIG.verb_type_rates.total()
+        )
+    }
+    if !CONFIG.adverb_type_rates.add_up() {
+        eprintln!(
+            "Adverb type rates don't add up to be under 1.00. Total = {}",
             CONFIG.verb_type_rates.total()
         )
     }
