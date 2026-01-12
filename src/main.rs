@@ -1,6 +1,7 @@
 use crate::{
     rates::{
-        AdjectiveTypeRates, AdverbTypeRates, NounTypeRates, Rates, VerbTypeRates, WordTypeRates,
+        AdjectiveTypeRates, AdverbTypeRates, ConjunctionTypeRates, DeterminerTypeRates,
+        NounTypeRates, PrepositionTypeRates, Rates, VerbTypeRates, WordTypeRates,
     },
     structures::{
         WORD_COUNT_STRUCTURE_EIGHT, WORD_COUNT_STRUCTURE_FIVE, WORD_COUNT_STRUCTURE_FOUR,
@@ -61,11 +62,15 @@ pub struct Config {
     pub use_structure_fitness: bool,
     pub use_grammar_fitness: bool,
     pub word_count: usize,
+
     pub word_type_rates: WordTypeRates,
     pub noun_type_rates: NounTypeRates,
     pub verb_type_rates: VerbTypeRates,
     pub adverb_type_rates: AdverbTypeRates,
     pub adjective_type_rates: AdjectiveTypeRates,
+    pub preposition_type_rates: PrepositionTypeRates,
+    pub determiner_type_rates: DeterminerTypeRates,
+    pub conjunction_type_rates: ConjunctionTypeRates,
 }
 
 #[derive(Debug, Clone, Copy, PartialEq)]

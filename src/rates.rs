@@ -70,7 +70,7 @@ pub struct AdjectiveTypeRates {
     pub proper: f32,
     pub descriptive: f32,
     pub possessive: f32,
-    pub quantative: f32,
+    pub quantitative: f32,
     pub demonstrative: f32,
 }
 
@@ -85,7 +85,7 @@ impl Rates for AdjectiveTypeRates {
             + self.proper
             + self.descriptive
             + self.possessive
-            + self.quantative
+            + self.quantitative
             + self.demonstrative
     }
 }
@@ -134,5 +134,64 @@ impl Rates for AdverbTypeRates {
     }
     fn total(&self) -> f32 {
         self.time + self.frequency + self.place + self.degree + self.manner + self.conjunctive
+    }
+}
+
+#[derive(Deserialize, Debug, Clone, Copy)]
+pub struct PrepositionTypeRates {
+    pub place: f32,
+    pub time: f32,
+    pub movement: f32,
+    pub purpose: f32,
+}
+impl Rates for PrepositionTypeRates {
+    fn add_up(&self) -> bool {
+        self.total().floor() <= 1.00
+    }
+    fn total(&self) -> f32 {
+        self.place + self.time + self.movement + self.purpose
+    }
+}
+
+#[derive(Deserialize, Debug, Clone, Copy)]
+pub struct DeterminerTypeRates {
+    pub article: f32,
+    pub demonstrative: f32,
+    pub distributive: f32,
+    pub interrogative: f32,
+    pub possessive: f32,
+    pub quantifier: f32,
+    pub relative: f32,
+    pub negative: f32,
+}
+
+impl Rates for DeterminerTypeRates {
+    fn add_up(&self) -> bool {
+        self.total().floor() <= 1.00
+    }
+    fn total(&self) -> f32 {
+        self.interrogative
+            + self.demonstrative
+            + self.distributive
+            + self.relative
+            + self.possessive
+            + self.article
+            + self.quantifier
+            + self.negative
+    }
+}
+
+#[derive(Deserialize, Debug, Clone, Copy)]
+pub struct ConjunctionTypeRates {
+    pub coordinating: f32,
+    pub subordinating: f32,
+    pub correlative: f32,
+}
+impl Rates for ConjunctionTypeRates {
+    fn add_up(&self) -> bool {
+        self.total().floor() <= 1.00
+    }
+    fn total(&self) -> f32 {
+        self.subordinating + self.coordinating + self.correlative
     }
 }

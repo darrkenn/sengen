@@ -111,7 +111,7 @@ pub enum AdjectiveType {
     Proper,
     Descriptive,
     Possessive,
-    Quantative,
+    Quantitative,
     Demonstrative,
 }
 
@@ -153,15 +153,16 @@ impl Word for Preposition {
 }
 
 // Determiner
-#[derive(Deserialize, PartialEq, Clone)]
+#[derive(Deserialize, PartialEq, Clone, Debug)]
 pub enum DeterminerType {
     Article,
     Demonstrative,
     Distributive,
     Interrogative,
     Possessive,
-    Quantative,
+    Quantifier,
     Relative,
+    Negative,
 }
 
 #[derive(Deserialize)]
@@ -180,7 +181,7 @@ impl Word for Determiner {
 }
 
 // Conjunction
-#[derive(Deserialize, PartialEq, Clone)]
+#[derive(Deserialize, PartialEq, Clone, Debug)]
 pub enum ConjunctionType {
     Coordinating,
     Subordinating,
@@ -332,18 +333,159 @@ impl Collection<Adverb, AdverbType> for Adverbs {
 #[derive(Deserialize)]
 pub struct Adjectives {
     pub words: Vec<Adjective>,
+    #[serde(skip)]
+    pub thresholds: Option<[(f32, AdjectiveType); 8]>,
 }
+impl Collection<Adjective, AdjectiveType> for Adjectives {
+    fn select(&self) -> &Adjective {
+        let thresholds = self.thresholds.as_ref().unwrap();
+        loop {
+            let random_f32: f32 = rand::random_range(0.00..1.00);
+            for &(threshold, ref adjective_type) in thresholds {
+                if random_f32 <= threshold {
+                    if let Some(adjective) = self.find_of_type(&adjective_type) {
+                        return adjective;
+                    } else {
+                        eprintln!("No adjectives of type {:?}", adjective_type)
+                    }
+                }
+            }
+        }
+    }
+    fn find_of_type(&self, r#type: &AdjectiveType) -> Option<&Adjective> {
+        self.words.iter().find(|adj| &adj.r#type == r#type)
+    }
+    fn calculate_thresholds(&mut self) {
+        let rates = CONFIG.adjective_type_rates;
+        #[rustfmt::skip]
+        let thresholds: [(f32, AdjectiveType); 8] = [
+            (rates.numeral, AdjectiveType::Numeral),
+            (rates.numeral + rates.interrogative, AdjectiveType::Interrogative),
+            (rates.numeral + rates.interrogative + rates.distributive, AdjectiveType::Distributive),
+            (rates.numeral + rates.interrogative + rates.distributive + rates.descriptive, AdjectiveType::Descriptive),
+            (rates.numeral + rates.interrogative + rates.distributive + rates.descriptive + rates.possessive, AdjectiveType::Possessive),
+            (rates.numeral + rates.interrogative + rates.distributive + rates.descriptive + rates.possessive + rates.demonstrative, AdjectiveType::Demonstrative),
+            (rates.numeral + rates.interrogative + rates.distributive + rates.descriptive + rates.possessive + rates.demonstrative + rates.quantitative, AdjectiveType::Quantitative),
+            (rates.numeral + rates.interrogative + rates.distributive + rates.descriptive + rates.possessive + rates.demonstrative + rates.quantitative + rates.proper, AdjectiveType::Proper),
+        ];
+        self.thresholds = Some(thresholds)
+    }
+}
+
 #[derive(Deserialize)]
 pub struct Prepositions {
     pub words: Vec<Preposition>,
+    #[serde(skip)]
+    pub thresholds: Option<[(f32, PrepositionType); 4]>,
 }
+impl Collection<Preposition, PrepositionType> for Prepositions {
+    fn select(&self) -> &Preposition {
+        let thresholds = self.thresholds.as_ref().unwrap();
+        loop {
+            let random_f32: f32 = rand::random_range(0.00..1.00);
+            for &(threshold, ref preposition_type) in thresholds {
+                if random_f32 <= threshold {
+                    if let Some(prepositon) = self.find_of_type(preposition_type) {
+                        return prepositon;
+                    } else {
+                        eprintln!("No prepositions of type {:?}", preposition_type)
+                    }
+                }
+            }
+        }
+    }
+    fn find_of_type(&self, r#type: &PrepositionType) -> Option<&Preposition> {
+        self.words.iter().find(|pre| &pre.r#type == r#type)
+    }
+    fn calculate_thresholds(&mut self) {
+        let rates = CONFIG.preposition_type_rates;
+        #[rustfmt::skip]
+        let thresholds: [(f32, PrepositionType); 4] = [
+        (rates.place, PrepositionType::Place),
+        (rates.place + rates.time, PrepositionType::Time),
+        (rates.place + rates.time + rates.movement, PrepositionType::Movement),
+        (rates.place + rates.time + rates.movement + rates.purpose, PrepositionType::Purpose)
+        ];
+        self.thresholds = Some(thresholds)
+    }
+}
+
 #[derive(Deserialize)]
 pub struct Determiners {
     pub words: Vec<Determiner>,
+    #[serde(skip)]
+    pub thresholds: Option<[(f32, DeterminerType); 8]>,
+}
+impl Collection<Determiner, DeterminerType> for Determiners {
+    fn select(&self) -> &Determiner {
+        let thresholds = self.thresholds.as_ref().unwrap();
+        loop {
+            let random_f32: f32 = rand::random_range(0.00..1.00);
+            for &(threshold, ref determiner_type) in thresholds {
+                if random_f32 <= threshold {
+                    if let Some(determiner) = self.find_of_type(determiner_type) {
+                        return determiner;
+                    } else {
+                        eprintln!("No determiners of type {:?}", determiner_type)
+                    }
+                }
+            }
+        }
+    }
+    fn find_of_type(&self, r#type: &DeterminerType) -> Option<&Determiner> {
+        self.words.iter().find(|det| &det.r#type == r#type)
+    }
+    fn calculate_thresholds(&mut self) {
+        let rates = CONFIG.determiner_type_rates;
+        #[rustfmt::skip]
+        let thresholds: [(f32, DeterminerType); 8] = [
+        (rates.distributive, DeterminerType::Distributive),
+        (rates.distributive + rates.article, DeterminerType::Article),
+        (rates.distributive + rates.article + rates.demonstrative, DeterminerType::Demonstrative),
+        (rates.distributive + rates.article + rates.demonstrative + rates.possessive, DeterminerType::Possessive),
+        (rates.distributive + rates.article + rates.demonstrative + rates.possessive + rates.quantifier, DeterminerType::Quantifier),
+        (rates.distributive + rates.article + rates.demonstrative + rates.possessive + rates.quantifier + rates.negative, DeterminerType::Negative),
+        (rates.distributive + rates.article + rates.demonstrative + rates.possessive + rates.quantifier + rates.negative + rates.relative, DeterminerType::Relative),
+        (rates.distributive + rates.article + rates.demonstrative + rates.possessive + rates.quantifier + rates.negative + rates.relative + rates.interrogative, DeterminerType::Interrogative)
+        ];
+        self.thresholds = Some(thresholds)
+    }
 }
 #[derive(Deserialize)]
 pub struct Conjunctions {
     pub words: Vec<Conjunction>,
+    #[serde(skip)]
+    pub thresholds: Option<[(f32, ConjunctionType); 3]>,
+}
+impl Collection<Conjunction, ConjunctionType> for Conjunctions {
+    fn select(&self) -> &Conjunction {
+        let thresholds = self.thresholds.as_ref().unwrap();
+        loop {
+            let random_f32 = rand::random_range(0.00..1.00);
+            for &(threshold, ref conjunction_type) in thresholds {
+                if random_f32 <= threshold {
+                    if let Some(conjunction) = self.find_of_type(conjunction_type) {
+                        return conjunction;
+                    } else {
+                        eprintln!("No conjunction of type {:?}", conjunction_type)
+                    }
+                }
+            }
+        }
+    }
+    fn find_of_type(&self, r#type: &ConjunctionType) -> Option<&Conjunction> {
+        self.words.iter().find(|con| &con.r#type == r#type)
+    }
+    fn calculate_thresholds(&mut self) {
+        let rates = CONFIG.conjunction_type_rates;
+        #[rustfmt::skip]
+        let thresholds: [(f32, ConjunctionType); 3] = [
+        (rates.coordinating, ConjunctionType::Coordinating),
+        (rates.coordinating + rates.subordinating, ConjunctionType::Subordinating),
+        (rates.coordinating + rates.subordinating + rates.correlative, ConjunctionType::Correlative)
+        ];
+        self.thresholds = Some(thresholds)
+    }
 }
 
 lazy_static! {
