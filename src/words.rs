@@ -1,5 +1,6 @@
 use lazy_static::lazy_static;
 use serde::Deserialize;
+use toml::de;
 
 use crate::{CONFIG, WordType};
 
@@ -14,7 +15,7 @@ where
     T: Word,
     B: PartialEq,
 {
-    fn select(&self) -> &T;
+    fn select(&self) -> Box<dyn Word + '_>;
     fn find_of_type(&self, r#type: &B) -> Option<&T>;
     fn calculate_thresholds(&mut self);
 }
@@ -39,7 +40,16 @@ pub struct Noun {
     pub r#type: NounType,
 }
 
+// Impl Word for both Noun and &Noun seems stupid but its the least complicated way
 impl Word for Noun {
+    fn word_type() -> WordType
+    where
+        Self: Sized,
+    {
+        WordType::Noun
+    }
+}
+impl Word for &Noun {
     fn word_type() -> WordType
     where
         Self: Sized,
@@ -76,6 +86,15 @@ impl Word for Verb {
     }
 }
 
+impl Word for &Verb {
+    fn word_type() -> WordType
+    where
+        Self: Sized,
+    {
+        WordType::Verb
+    }
+}
+
 // Adverb
 #[derive(Deserialize, PartialEq, Debug, Clone)]
 pub enum AdverbType {
@@ -94,6 +113,15 @@ pub struct Adverb {
 }
 
 impl Word for Adverb {
+    fn word_type() -> WordType
+    where
+        Self: Sized,
+    {
+        WordType::Adverb
+    }
+}
+
+impl Word for &Adverb {
     fn word_type() -> WordType
     where
         Self: Sized,
@@ -130,6 +158,15 @@ impl Word for Adjective {
     }
 }
 
+impl Word for &Adjective {
+    fn word_type() -> WordType
+    where
+        Self: Sized,
+    {
+        WordType::Adjective
+    }
+}
+
 // Preposition
 #[derive(Deserialize, PartialEq, Debug, Clone)]
 pub enum PrepositionType {
@@ -138,12 +175,23 @@ pub enum PrepositionType {
     Movement,
     Purpose,
 }
+
 #[derive(Deserialize)]
 pub struct Preposition {
     pub word: String,
     pub r#type: PrepositionType,
 }
+
 impl Word for Preposition {
+    fn word_type() -> WordType
+    where
+        Self: Sized,
+    {
+        WordType::Preposition
+    }
+}
+
+impl Word for &Preposition {
     fn word_type() -> WordType
     where
         Self: Sized,
@@ -180,6 +228,15 @@ impl Word for Determiner {
     }
 }
 
+impl Word for &Determiner {
+    fn word_type() -> WordType
+    where
+        Self: Sized,
+    {
+        WordType::Determiner
+    }
+}
+
 // Conjunction
 #[derive(Deserialize, PartialEq, Clone, Debug)]
 pub enum ConjunctionType {
@@ -202,6 +259,15 @@ impl Word for Conjunction {
     }
 }
 
+impl Word for &Conjunction {
+    fn word_type() -> WordType
+    where
+        Self: Sized,
+    {
+        WordType::Conjunction
+    }
+}
+
 // Collection of nouns
 #[derive(Deserialize)]
 pub struct Nouns {
@@ -210,14 +276,14 @@ pub struct Nouns {
     pub thresholds: Option<[(f32, NounType); 9]>,
 }
 impl Collection<Noun, NounType> for Nouns {
-    fn select(&self) -> &Noun {
+    fn select(&self) -> Box<dyn Word + '_> {
         let thresholds = self.thresholds.as_ref().unwrap();
         loop {
             let random_f32: f32 = rand::random_range(0.00..1.00);
             for &(threshold, ref noun_type) in thresholds {
                 if random_f32 <= threshold {
                     if let Some(noun) = self.find_of_type(&noun_type) {
-                        return noun;
+                        return Box::new(noun);
                     } else {
                         eprintln!("No nouns of type {:?}", &noun_type);
                     };
@@ -254,14 +320,14 @@ pub struct Verbs {
     pub thresholds: Option<[(f32, VerbType); 8]>,
 }
 impl Collection<Verb, VerbType> for Verbs {
-    fn select(&self) -> &Verb {
+    fn select(&self) -> Box<dyn Word + '_> {
         let thresholds = self.thresholds.as_ref().unwrap();
         loop {
             let random_f32: f32 = rand::random_range(0.00..1.00);
             for &(threshold, ref verb_type) in thresholds {
                 if random_f32 <= threshold {
                     if let Some(verb) = self.find_of_type(&verb_type) {
-                        return verb;
+                        return Box::new(verb);
                     } else {
                         eprintln!("No verbs of type {:?}", verb_type);
                     }
@@ -297,14 +363,14 @@ pub struct Adverbs {
     pub thresholds: Option<[(f32, AdverbType); 6]>,
 }
 impl Collection<Adverb, AdverbType> for Adverbs {
-    fn select(&self) -> &Adverb {
+    fn select(&self) -> Box<dyn Word + '_> {
         let thresholds = self.thresholds.as_ref().unwrap();
         loop {
             let random_f32: f32 = rand::random_range(0.00..1.00);
             for &(threshold, ref adverb_type) in thresholds {
                 if random_f32 <= threshold {
                     if let Some(adverb) = self.find_of_type(&adverb_type) {
-                        return adverb;
+                        return Box::new(adverb);
                     } else {
                         eprintln!("No adverbs of type {:?}", adverb_type);
                     }
@@ -337,14 +403,14 @@ pub struct Adjectives {
     pub thresholds: Option<[(f32, AdjectiveType); 8]>,
 }
 impl Collection<Adjective, AdjectiveType> for Adjectives {
-    fn select(&self) -> &Adjective {
+    fn select(&self) -> Box<dyn Word + '_> {
         let thresholds = self.thresholds.as_ref().unwrap();
         loop {
             let random_f32: f32 = rand::random_range(0.00..1.00);
             for &(threshold, ref adjective_type) in thresholds {
                 if random_f32 <= threshold {
                     if let Some(adjective) = self.find_of_type(&adjective_type) {
-                        return adjective;
+                        return Box::new(adjective);
                     } else {
                         eprintln!("No adjectives of type {:?}", adjective_type)
                     }
@@ -379,14 +445,14 @@ pub struct Prepositions {
     pub thresholds: Option<[(f32, PrepositionType); 4]>,
 }
 impl Collection<Preposition, PrepositionType> for Prepositions {
-    fn select(&self) -> &Preposition {
+    fn select(&self) -> Box<dyn Word + '_> {
         let thresholds = self.thresholds.as_ref().unwrap();
         loop {
             let random_f32: f32 = rand::random_range(0.00..1.00);
             for &(threshold, ref preposition_type) in thresholds {
                 if random_f32 <= threshold {
                     if let Some(prepositon) = self.find_of_type(preposition_type) {
-                        return prepositon;
+                        return Box::new(prepositon);
                     } else {
                         eprintln!("No prepositions of type {:?}", preposition_type)
                     }
@@ -417,14 +483,14 @@ pub struct Determiners {
     pub thresholds: Option<[(f32, DeterminerType); 8]>,
 }
 impl Collection<Determiner, DeterminerType> for Determiners {
-    fn select(&self) -> &Determiner {
+    fn select(&self) -> Box<dyn Word + '_> {
         let thresholds = self.thresholds.as_ref().unwrap();
         loop {
             let random_f32: f32 = rand::random_range(0.00..1.00);
             for &(threshold, ref determiner_type) in thresholds {
                 if random_f32 <= threshold {
                     if let Some(determiner) = self.find_of_type(determiner_type) {
-                        return determiner;
+                        return Box::new(determiner);
                     } else {
                         eprintln!("No determiners of type {:?}", determiner_type)
                     }
@@ -458,14 +524,14 @@ pub struct Conjunctions {
     pub thresholds: Option<[(f32, ConjunctionType); 3]>,
 }
 impl Collection<Conjunction, ConjunctionType> for Conjunctions {
-    fn select(&self) -> &Conjunction {
+    fn select(&self) -> Box<dyn Word + '_> {
         let thresholds = self.thresholds.as_ref().unwrap();
         loop {
             let random_f32 = rand::random_range(0.00..1.00);
             for &(threshold, ref conjunction_type) in thresholds {
                 if random_f32 <= threshold {
                     if let Some(conjunction) = self.find_of_type(conjunction_type) {
-                        return conjunction;
+                        return Box::new(conjunction);
                     } else {
                         eprintln!("No conjunction of type {:?}", conjunction_type)
                     }

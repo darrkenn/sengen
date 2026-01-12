@@ -51,6 +51,20 @@ lazy_static! {
             &[]
         }
     };
+    pub static ref WORD_THRESHOLDS: [(f32, WordType); 7] = {
+        let rates = CONFIG.word_type_rates;
+        #[rustfmt::skip]
+        let thresholds: [(f32, WordType); 7] = [
+        (rates.adverb, WordType::Adverb),
+        (rates.adverb + rates.noun, WordType::Noun),
+        (rates.adverb + rates.noun + rates.verb, WordType::Verb),
+        (rates.adverb + rates.noun + rates.verb + rates.preposition, WordType::Preposition),
+        (rates.adverb + rates.noun + rates.verb + rates.preposition + rates.conjunction, WordType::Conjunction),
+        (rates.adverb + rates.noun + rates.verb + rates.preposition + rates.conjunction + rates.determiner, WordType::Determiner),
+        (rates.adverb + rates.noun + rates.verb + rates.preposition + rates.conjunction + rates.determiner + rates.adjective, WordType::Adjective)
+        ];
+        thresholds
+    };
 }
 
 #[derive(Deserialize, Debug)]
