@@ -1,4 +1,5 @@
 use crate::{
+    chromosome::Chromosome,
     rates::{
         AdjectiveTypeRates, AdverbTypeRates, ConjunctionTypeRates, DeterminerTypeRates,
         NounTypeRates, PrepositionTypeRates, Rates, VerbTypeRates, WordTypeRates,
@@ -7,10 +8,15 @@ use crate::{
         WORD_COUNT_STRUCTURE_EIGHT, WORD_COUNT_STRUCTURE_FIVE, WORD_COUNT_STRUCTURE_FOUR,
         WORD_COUNT_STRUCTURE_SEVEN, WORD_COUNT_STRUCTURE_SIX, WORD_COUNT_STRUCTURE_THREE,
     },
-    words::Word,
+    words::{Collection, NOUNS, Word},
 };
-use genetica::individual::Generate;
+use genetica::{
+    crossover::dynamic_length_single_point_crossover,
+    individual::{Generate, Individual},
+    population::{self, generate_population, sort_population_descending},
+};
 use lazy_static::lazy_static;
+use rayon::iter::{IntoParallelRefMutIterator, ParallelIterator};
 use serde::Deserialize;
 use std::{fs, process};
 
@@ -88,7 +94,7 @@ pub struct Config {
 }
 
 #[derive(Debug, Clone, Copy, PartialEq)]
-enum WordType {
+pub enum WordType {
     Noun,
     Verb,
     Adverb,
@@ -110,26 +116,78 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         eprintln!(
             "Noun type rates don't add up to be under 1.00. Total = {}",
             CONFIG.noun_type_rates.total()
-        )
+        );
+        process::exit(1)
     }
     if !CONFIG.verb_type_rates.add_up() {
         eprintln!(
             "Verb type rates don't add up to be under 1.00. Total = {}",
             CONFIG.verb_type_rates.total()
-        )
+        );
+        process::exit(1)
     }
     if !CONFIG.adverb_type_rates.add_up() {
         eprintln!(
             "Adverb type rates don't add up to be under 1.00. Total = {}",
             CONFIG.verb_type_rates.total()
-        )
+        );
+        process::exit(1)
     }
     if !CONFIG.adjective_type_rates.add_up() {
         eprintln!(
             "Adjective type rates don't add up to be under 1.00. Total = {}",
             CONFIG.adjective_type_rates.total()
-        )
+        );
+        process::exit(1)
     }
+    if !CONFIG.preposition_type_rates.add_up() {
+        eprintln!(
+            "Preposition type rates don't add up to be under 1.00. Total = {}",
+            CONFIG.preposition_type_rates.total()
+        );
+        process::exit(1)
+    }
+    if !CONFIG.determiner_type_rates.add_up() {
+        eprintln!(
+            "Determiner type rates don't add up to be under 1.00. Total = {}",
+            CONFIG.determiner_type_rates.total()
+        );
+        process::exit(1)
+    }
+    if !CONFIG.conjunction_type_rates.add_up() {
+        eprintln!(
+            "Conjunction type rate don't add up to be under 1.00. Total = {}",
+            CONFIG.conjunction_type_rates.total()
+        );
+        process::exit(1)
+    }
+
+    let mut population: Vec<Chromosome> = generate_population(CONFIG.population_count);
+
+    for _ in 0..CONFIG.generations {
+        population
+            .par_iter_mut()
+            .for_each(|c| c.calculate_fitness());
+        sort_population_descending(&mut population);
+        let parent1 = &population[0];
+        let parent2 = &population[1];
+        let (mut child1, mut child2) =
+            dynamic_length_single_point_crossover(parent1, parent2, CONFIG.crossover_probability);
+        child1.mutate_genes();
+        child2.mutate_genes();
+
+        let mut new_population: Vec<Chromosome> = generate_population(CONFIG.population_count - 4);
+
+        new_population.push(child1);
+        new_population.push(child2);
+        new_population.push(parent1.clone());
+        new_population.push(parent2.clone());
+        population = new_population;
+    }
+
+    sort_population_descending(&mut population);
+    let best = &population[0];
+    println!("{best:?}");
 
     Ok(())
 }

@@ -1,4 +1,6 @@
-use genetica::individual::{Generate, Individual, Mutate};
+use std::sync::Arc;
+
+use genetica::individual::{DynamicLengthIndividual, Generate, Individual, Mutate};
 use rand::random_range;
 
 use crate::{
@@ -9,12 +11,12 @@ use crate::{
     },
 };
 
-#[derive(Debug)]
-pub struct GeneType<'a> {
-    pub word: Box<dyn Word + 'a>,
+#[derive(Debug, Clone)]
+pub struct GeneType {
+    pub word: Arc<dyn Word>,
 }
 
-fn select_word() -> Box<dyn Word> {
+fn select_word() -> Arc<dyn Word> {
     let thresholds = WORD_THRESHOLDS.as_ref();
     loop {
         let random_f32 = random_range(0.00..1.00);
@@ -35,7 +37,7 @@ fn select_word() -> Box<dyn Word> {
     }
 }
 
-impl<'a> Generate for GeneType<'a> {
+impl Generate for GeneType {
     fn generate() -> Self {
         GeneType {
             word: select_word(),
@@ -43,7 +45,7 @@ impl<'a> Generate for GeneType<'a> {
     }
 }
 
-impl<'a> Mutate for GeneType<'a> {
+impl<'a> Mutate for GeneType {
     fn mutate(&mut self) {
         if rand::random_range(0.00..1.00) <= CONFIG.mutation_probability {
             self.word = select_word()
@@ -51,8 +53,42 @@ impl<'a> Mutate for GeneType<'a> {
     }
 }
 
-#[derive(Debug)]
-pub struct Chromosome<'a> {
-    pub genes: Vec<GeneType<'a>>,
+#[derive(Debug, Clone)]
+pub struct Chromosome {
+    pub genes: Vec<GeneType>,
     pub fitness: Option<f32>,
+}
+
+impl Individual for Chromosome {
+    type GeneType = GeneType;
+    fn new() -> Self {
+        let genes: Vec<GeneType> = (0..CONFIG.word_count)
+            .map(|_| GeneType::generate())
+            .collect();
+        Chromosome {
+            genes,
+            fitness: None,
+        }
+    }
+    fn mutate_genes(&mut self) {
+        self.genes_mut().iter_mut().for_each(|g| g.mutate());
+    }
+    fn fitness(&self) -> Option<f32> {
+        self.fitness
+    }
+    fn fitness_mut(&mut self) -> &mut Option<f32> {
+        &mut self.fitness
+    }
+    fn calculate_fitness(&mut self) {
+        self.fitness = Some(0.0)
+    }
+}
+
+impl DynamicLengthIndividual for Chromosome {
+    fn genes(&self) -> &Vec<Self::GeneType> {
+        &self.genes
+    }
+    fn genes_mut(&mut self) -> &mut Vec<Self::GeneType> {
+        &mut self.genes
+    }
 }

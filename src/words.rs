@@ -1,10 +1,11 @@
+use std::{fmt::Debug, ops::DerefMut, sync::Arc};
+
 use lazy_static::lazy_static;
 use serde::Deserialize;
-use toml::de;
 
 use crate::{CONFIG, WordType};
 
-pub trait Word {
+pub trait Word: Send + Sync + Debug {
     fn word_type() -> WordType
     where
         Self: Sized;
@@ -15,7 +16,7 @@ where
     T: Word,
     B: PartialEq,
 {
-    fn select(&self) -> Box<dyn Word + '_>;
+    fn select(&self) -> Arc<dyn Word + '_>;
     fn find_of_type(&self, r#type: &B) -> Option<&T>;
     fn calculate_thresholds(&mut self);
 }
@@ -34,7 +35,7 @@ pub enum NounType {
     Plural,
 }
 
-#[derive(Deserialize)]
+#[derive(Deserialize, Debug)]
 pub struct Noun {
     pub word: String,
     pub r#type: NounType,
@@ -71,7 +72,7 @@ pub enum VerbType {
     Irregular,
 }
 
-#[derive(Deserialize)]
+#[derive(Deserialize, Debug)]
 pub struct Verb {
     pub word: String,
     pub r#type: VerbType,
@@ -106,7 +107,7 @@ pub enum AdverbType {
     Conjunctive,
 }
 
-#[derive(Deserialize)]
+#[derive(Deserialize, Debug)]
 pub struct Adverb {
     pub word: String,
     pub r#type: AdverbType,
@@ -143,7 +144,7 @@ pub enum AdjectiveType {
     Demonstrative,
 }
 
-#[derive(Deserialize)]
+#[derive(Deserialize, Debug)]
 pub struct Adjective {
     pub word: String,
     pub r#type: AdjectiveType,
@@ -176,7 +177,7 @@ pub enum PrepositionType {
     Purpose,
 }
 
-#[derive(Deserialize)]
+#[derive(Deserialize, Debug)]
 pub struct Preposition {
     pub word: String,
     pub r#type: PrepositionType,
@@ -213,7 +214,7 @@ pub enum DeterminerType {
     Negative,
 }
 
-#[derive(Deserialize)]
+#[derive(Deserialize, Debug)]
 pub struct Determiner {
     pub word: String,
     pub r#type: DeterminerType,
@@ -244,7 +245,7 @@ pub enum ConjunctionType {
     Subordinating,
     Correlative,
 }
-#[derive(Deserialize)]
+#[derive(Deserialize, Debug)]
 pub struct Conjunction {
     pub word: String,
     pub r#type: ConjunctionType,
@@ -276,14 +277,14 @@ pub struct Nouns {
     pub thresholds: Option<[(f32, NounType); 9]>,
 }
 impl Collection<Noun, NounType> for Nouns {
-    fn select(&self) -> Box<dyn Word + '_> {
+    fn select(&self) -> Arc<dyn Word + '_> {
         let thresholds = self.thresholds.as_ref().unwrap();
         loop {
             let random_f32: f32 = rand::random_range(0.00..1.00);
             for &(threshold, ref noun_type) in thresholds {
                 if random_f32 <= threshold {
                     if let Some(noun) = self.find_of_type(&noun_type) {
-                        return Box::new(noun);
+                        return Arc::new(noun);
                     } else {
                         eprintln!("No nouns of type {:?}", &noun_type);
                     };
@@ -320,14 +321,14 @@ pub struct Verbs {
     pub thresholds: Option<[(f32, VerbType); 8]>,
 }
 impl Collection<Verb, VerbType> for Verbs {
-    fn select(&self) -> Box<dyn Word + '_> {
+    fn select(&self) -> Arc<dyn Word + '_> {
         let thresholds = self.thresholds.as_ref().unwrap();
         loop {
             let random_f32: f32 = rand::random_range(0.00..1.00);
             for &(threshold, ref verb_type) in thresholds {
                 if random_f32 <= threshold {
                     if let Some(verb) = self.find_of_type(&verb_type) {
-                        return Box::new(verb);
+                        return Arc::new(verb);
                     } else {
                         eprintln!("No verbs of type {:?}", verb_type);
                     }
@@ -363,14 +364,14 @@ pub struct Adverbs {
     pub thresholds: Option<[(f32, AdverbType); 6]>,
 }
 impl Collection<Adverb, AdverbType> for Adverbs {
-    fn select(&self) -> Box<dyn Word + '_> {
+    fn select(&self) -> Arc<dyn Word + '_> {
         let thresholds = self.thresholds.as_ref().unwrap();
         loop {
             let random_f32: f32 = rand::random_range(0.00..1.00);
             for &(threshold, ref adverb_type) in thresholds {
                 if random_f32 <= threshold {
                     if let Some(adverb) = self.find_of_type(&adverb_type) {
-                        return Box::new(adverb);
+                        return Arc::new(adverb);
                     } else {
                         eprintln!("No adverbs of type {:?}", adverb_type);
                     }
@@ -403,14 +404,14 @@ pub struct Adjectives {
     pub thresholds: Option<[(f32, AdjectiveType); 8]>,
 }
 impl Collection<Adjective, AdjectiveType> for Adjectives {
-    fn select(&self) -> Box<dyn Word + '_> {
+    fn select(&self) -> Arc<dyn Word + '_> {
         let thresholds = self.thresholds.as_ref().unwrap();
         loop {
             let random_f32: f32 = rand::random_range(0.00..1.00);
             for &(threshold, ref adjective_type) in thresholds {
                 if random_f32 <= threshold {
                     if let Some(adjective) = self.find_of_type(&adjective_type) {
-                        return Box::new(adjective);
+                        return Arc::new(adjective);
                     } else {
                         eprintln!("No adjectives of type {:?}", adjective_type)
                     }
@@ -445,14 +446,14 @@ pub struct Prepositions {
     pub thresholds: Option<[(f32, PrepositionType); 4]>,
 }
 impl Collection<Preposition, PrepositionType> for Prepositions {
-    fn select(&self) -> Box<dyn Word + '_> {
+    fn select(&self) -> Arc<dyn Word + '_> {
         let thresholds = self.thresholds.as_ref().unwrap();
         loop {
             let random_f32: f32 = rand::random_range(0.00..1.00);
             for &(threshold, ref preposition_type) in thresholds {
                 if random_f32 <= threshold {
                     if let Some(prepositon) = self.find_of_type(preposition_type) {
-                        return Box::new(prepositon);
+                        return Arc::new(prepositon);
                     } else {
                         eprintln!("No prepositions of type {:?}", preposition_type)
                     }
@@ -483,14 +484,14 @@ pub struct Determiners {
     pub thresholds: Option<[(f32, DeterminerType); 8]>,
 }
 impl Collection<Determiner, DeterminerType> for Determiners {
-    fn select(&self) -> Box<dyn Word + '_> {
+    fn select(&self) -> Arc<dyn Word + '_> {
         let thresholds = self.thresholds.as_ref().unwrap();
         loop {
             let random_f32: f32 = rand::random_range(0.00..1.00);
             for &(threshold, ref determiner_type) in thresholds {
                 if random_f32 <= threshold {
                     if let Some(determiner) = self.find_of_type(determiner_type) {
-                        return Box::new(determiner);
+                        return Arc::new(determiner);
                     } else {
                         eprintln!("No determiners of type {:?}", determiner_type)
                     }
@@ -524,14 +525,14 @@ pub struct Conjunctions {
     pub thresholds: Option<[(f32, ConjunctionType); 3]>,
 }
 impl Collection<Conjunction, ConjunctionType> for Conjunctions {
-    fn select(&self) -> Box<dyn Word + '_> {
+    fn select(&self) -> Arc<dyn Word + '_> {
         let thresholds = self.thresholds.as_ref().unwrap();
         loop {
             let random_f32 = rand::random_range(0.00..1.00);
             for &(threshold, ref conjunction_type) in thresholds {
                 if random_f32 <= threshold {
                     if let Some(conjunction) = self.find_of_type(conjunction_type) {
-                        return Box::new(conjunction);
+                        return Arc::new(conjunction);
                     } else {
                         eprintln!("No conjunction of type {:?}", conjunction_type)
                     }
@@ -557,37 +558,44 @@ impl Collection<Conjunction, ConjunctionType> for Conjunctions {
 lazy_static! {
     pub static ref NOUNS: Nouns = {
         let content = include_str!("../words/nouns.toml");
-        let nouns: Nouns = toml::from_str(&content).unwrap();
+        let mut nouns: Nouns = toml::from_str(&content).unwrap();
+        nouns.calculate_thresholds();
         nouns
     };
     pub static ref VERBS: Verbs = {
         let content = include_str!("../words/verbs.toml");
-        let verbs: Verbs = toml::from_str(&content).unwrap();
+        let mut verbs: Verbs = toml::from_str(&content).unwrap();
+        verbs.calculate_thresholds();
         verbs
     };
     pub static ref ADVERBS: Adverbs = {
         let content = include_str!("../words/adverbs.toml");
-        let adverbs: Adverbs = toml::from_str(&content).unwrap();
+        let mut adverbs: Adverbs = toml::from_str(&content).unwrap();
+        adverbs.calculate_thresholds();
         adverbs
     };
     pub static ref ADJECTIVES: Adjectives = {
         let content = include_str!("../words/adjectives.toml");
-        let adjectives: Adjectives = toml::from_str(&content).unwrap();
+        let mut adjectives: Adjectives = toml::from_str(&content).unwrap();
+        adjectives.calculate_thresholds();
         adjectives
     };
     pub static ref PREPOSITIONS: Prepositions = {
         let content = include_str!("../words/prepositions.toml");
-        let prepositions: Prepositions = toml::from_str(&content).unwrap();
+        let mut prepositions: Prepositions = toml::from_str(&content).unwrap();
+        prepositions.calculate_thresholds();
         prepositions
     };
     pub static ref DETERMINERS: Determiners = {
         let content = include_str!("../words/determiners.toml");
-        let determiners: Determiners = toml::from_str(&content).unwrap();
+        let mut determiners: Determiners = toml::from_str(&content).unwrap();
+        determiners.calculate_thresholds();
         determiners
     };
     pub static ref CONJUNCTIONS: Conjunctions = {
         let content = include_str!("../words/conjunctions.toml");
-        let conjunctions: Conjunctions = toml::from_str(&content).unwrap();
+        let mut conjunctions: Conjunctions = toml::from_str(&content).unwrap();
+        conjunctions.calculate_thresholds();
         conjunctions
     };
 }
