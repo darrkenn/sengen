@@ -1,11 +1,23 @@
-nouns = [
-  { singular = "cat", plural = "cats", proper = false },
-  { singular = "blueberry", plural = "blueberries", proper = false },
-  { singular = "sprinkle", plural = "sprinkles", proper = false },
-  { singular = "France", proper = true },
-  { singular = "dog", plural = "dogs", proper = false },
-  { singular = "apple", plural = "apples", proper = false },
-  { singular = "river", plural = "rivers", proper = false },
-  { singular = "computer", plural = "computers", proper = false },
-  { singular = "idea", plural = "ideas", proper = false },
+words = [
+  # Common nouns
+  { word = "cat", type = "Common", number = "Singular" },
+  { word = "cats", type = "Common", number = "Plural" },
+  { word = "blueberry", type = "Common", number = "Singular" },
+  { word = "blueberries", type = "Common", number = "Plural" },
+  { word = "sprinkle", type = "Common", number = "Singular" },
+  { word = "sprinkles", type = "Common", number = "Plural" },
+  { word = "dog", type = "Common", number = "Singular" },
+  { word = "dogs", type = "Common", number = "Plural" },
+  { word = "apple", type = "Common", number = "Singular" },
+  { word = "apples", type = "Common", number = "Plural" },
+  { word = "computer", type = "Common", number = "Singular" },
+  { word = "computers", type = "Common", number = "Plural" },
+
+  #Proper nouns
+  { word = "France", type = "Proper", number = "Singular" },
+  { word = "Paul", type = "Proper", number = "Singular" },
+  { word = "Ireland", type = "Proper", number = "Singular" },
+  { word = "Google", type = "Proper", number = "Singular" },
+  { word = "Monday", type = "Proper", number = "Singular" },
+  { word = "Titanic", type = "Proper", number = "Singular" },
 ]

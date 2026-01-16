@@ -1,4 +1,4 @@
-verbs = [
+words = [
   { past = "jumped", present = "jumping", future = "jump" },
   { past = "walked", present = "walking", future = "walk" },
   { past = "talked", present = "talking", future = "talk" },

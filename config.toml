@@ -16,13 +16,23 @@ determiner = 0.10
 conjunction = 0.10
 
 [noun_type_rates]
-singular = 0.30
-plural = 0.30
+common = 0.142
+proper = 0.142
+concrete = 0.142
+abstract = 0.142
+countable = 0.142
+uncountable = 0.142
+collective = 0.142
 
 [verb_type_rates]
-past = 0.30
-present = 0.35
-future = 0.35
+action = 0.11
+transitive = 0.11
+intransitive = 0.11
+auxiliary = 0.11
+linking = 0.11
+modal = 0.11
+regular = 0.11
+irregular = 0.11
 
 [adjective_type_rates]
 demonstrative = 0.125
@@ -32,4 +42,33 @@ numeral = 0.125
 proper = 0.125
 descriptive = 0.125
 possessive = 0.125
-quantative = 0.125
+quantitative = 0.125
+
+[adverb_type_rates]
+time = 0.16
+frequency = 0.16
+place = 0.16
+degree = 0.16
+manner = 0.16
+conjunctive = 0.16
+
+[preposition_type_rates]
+place = 0.25
+time = 0.25
+movement = 0.25
+purpose = 0.25
+
+[determiner_type_rates]
+article = 0.125
+demonstrative = 0.125
+distributive = 0.125
+interrogative = 0.125
+possessive = 0.125
+quantifier = 0.125
+relative = 0.125
+negative = 0.125
+
+[conjunction_type_rates]
+coordinating = 0.33
+subordinating = 0.33
+correlative = 0.33

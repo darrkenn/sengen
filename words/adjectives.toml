@@ -1,4 +1,4 @@
-adjectives = [
+words = [
   #Interrogative
   { word = "what", adjective_type = "Interrogative" },
   { word = "which", adjective_type = "Interrogative" },

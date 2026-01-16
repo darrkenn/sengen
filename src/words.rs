@@ -1,4 +1,4 @@
-use std::{fmt::Debug, ops::DerefMut, sync::Arc};
+use std::{fmt::Debug, ops::DerefMut, process, sync::Arc};
 
 use lazy_static::lazy_static;
 use serde::Deserialize;
@@ -21,6 +21,11 @@ where
     fn calculate_thresholds(&mut self);
 }
 
+#[derive(Deserialize, PartialEq, Debug, Clone)]
+pub enum Number {
+    Singular,
+    Plural,
+}
 // Noun
 #[derive(Deserialize, PartialEq, Debug, Clone)]
 pub enum NounType {
@@ -31,14 +36,13 @@ pub enum NounType {
     Countable,
     Uncountable,
     Collective,
-    Singular,
-    Plural,
 }
 
 #[derive(Deserialize, Debug)]
 pub struct Noun {
     pub word: String,
     pub r#type: NounType,
+    pub number: Number,
 }
 
 // Impl Word for both Noun and &Noun seems stupid but its the least complicated way
@@ -274,7 +278,7 @@ impl Word for &Conjunction {
 pub struct Nouns {
     pub words: Vec<Noun>,
     #[serde(skip)]
-    pub thresholds: Option<[(f32, NounType); 9]>,
+    pub thresholds: Option<[(f32, NounType); 7]>,
 }
 impl Collection<Noun, NounType> for Nouns {
     fn select(&self) -> Arc<dyn Word + '_> {
@@ -298,16 +302,14 @@ impl Collection<Noun, NounType> for Nouns {
     fn calculate_thresholds(&mut self) {
         let rates = CONFIG.noun_type_rates;
         #[rustfmt::skip]
-        let thresholds: [(f32, NounType); 9] = [
-            (rates.singular, NounType::Singular),
-            (rates.singular + rates.r#abstract, NounType::Abstract),
-            (rates.singular + rates.r#abstract + rates.proper, NounType::Proper),
-            (rates.singular + rates.r#abstract + rates.proper + rates.concrete,NounType::Concrete,),
-            (rates.singular + rates.r#abstract + rates.proper + rates.concrete + rates.uncountable, NounType::Uncountable),
-            (rates.singular + rates.r#abstract + rates.proper + rates.concrete + rates.uncountable + rates.common, NounType::Common),
-            (rates.singular + rates.r#abstract + rates.proper + rates.concrete + rates.uncountable + rates.common + rates.collective,NounType::Collective),
-            (rates.singular + rates.r#abstract + rates.proper + rates.concrete + rates.uncountable + rates.common + rates.collective + rates.plural, NounType::Plural),
-            (rates.singular + rates.r#abstract + rates.proper + rates.concrete + rates.uncountable + rates.common + rates.collective + rates.plural + rates.countable,NounType::Countable),
+        let thresholds: [(f32, NounType); 7] = [
+            (rates.r#abstract, NounType::Abstract),
+            (rates.r#abstract + rates.proper, NounType::Proper),
+            (rates.r#abstract + rates.proper + rates.concrete,NounType::Concrete,),
+            (rates.r#abstract + rates.proper + rates.concrete + rates.uncountable, NounType::Uncountable),
+            (rates.r#abstract + rates.proper + rates.concrete + rates.uncountable + rates.common, NounType::Common),
+            (rates.r#abstract + rates.proper + rates.concrete + rates.uncountable + rates.common + rates.collective,NounType::Collective),
+            (rates.r#abstract + rates.proper + rates.concrete + rates.uncountable + rates.common + rates.collective + rates.countable,NounType::Countable),
         ];
         self.thresholds = Some(thresholds)
     }
@@ -558,43 +560,85 @@ impl Collection<Conjunction, ConjunctionType> for Conjunctions {
 lazy_static! {
     pub static ref NOUNS: Nouns = {
         let content = include_str!("../words/nouns.toml");
-        let mut nouns: Nouns = toml::from_str(&content).unwrap();
+        let mut nouns: Nouns = match toml::from_str(&content) {
+            Ok(n) => n,
+            Err(e) => {
+                eprintln!("Error with nouns.toml: {e:#}");
+                process::exit(1);
+            }
+        };
         nouns.calculate_thresholds();
         nouns
     };
     pub static ref VERBS: Verbs = {
         let content = include_str!("../words/verbs.toml");
-        let mut verbs: Verbs = toml::from_str(&content).unwrap();
+        let mut verbs: Verbs = match toml::from_str(&content) {
+            Ok(v) => v,
+            Err(e) => {
+                eprintln!("Error with verbs.toml: {e:#}");
+                process::exit(1);
+            }
+        };
         verbs.calculate_thresholds();
         verbs
     };
     pub static ref ADVERBS: Adverbs = {
         let content = include_str!("../words/adverbs.toml");
-        let mut adverbs: Adverbs = toml::from_str(&content).unwrap();
+        let mut adverbs: Adverbs = match toml::from_str(&content) {
+            Ok(a) => a,
+            Err(e) => {
+                eprintln!("Error with adverbs.toml: {e:#}");
+                process::exit(1);
+            }
+        };
         adverbs.calculate_thresholds();
         adverbs
     };
     pub static ref ADJECTIVES: Adjectives = {
         let content = include_str!("../words/adjectives.toml");
-        let mut adjectives: Adjectives = toml::from_str(&content).unwrap();
+        let mut adjectives: Adjectives = match toml::from_str(&content) {
+            Ok(a) => a,
+            Err(e) => {
+                eprintln!("Error with adjectives.toml: {e:#}");
+                process::exit(1);
+            }
+        };
         adjectives.calculate_thresholds();
         adjectives
     };
     pub static ref PREPOSITIONS: Prepositions = {
         let content = include_str!("../words/prepositions.toml");
-        let mut prepositions: Prepositions = toml::from_str(&content).unwrap();
+        let mut prepositions: Prepositions = match toml::from_str(&content) {
+            Ok(p) => p,
+            Err(e) => {
+                eprintln!("Error with prepositions.toml: {e:#}");
+                process::exit(1);
+            }
+        };
         prepositions.calculate_thresholds();
         prepositions
     };
     pub static ref DETERMINERS: Determiners = {
         let content = include_str!("../words/determiners.toml");
-        let mut determiners: Determiners = toml::from_str(&content).unwrap();
+        let mut determiners: Determiners = match toml::from_str(&content) {
+            Ok(d) => d,
+            Err(e) => {
+                eprintln!("Error with determiners.toml: {e:#}");
+                process::exit(1);
+            }
+        };
         determiners.calculate_thresholds();
         determiners
     };
     pub static ref CONJUNCTIONS: Conjunctions = {
         let content = include_str!("../words/conjunctions.toml");
-        let mut conjunctions: Conjunctions = toml::from_str(&content).unwrap();
+        let mut conjunctions: Conjunctions = match toml::from_str(&content) {
+            Ok(c) => c,
+            Err(e) => {
+                eprintln!("Error with conjunctions.toml: {e:#}");
+                process::exit(1);
+            }
+        };
         conjunctions.calculate_thresholds();
         conjunctions
     };

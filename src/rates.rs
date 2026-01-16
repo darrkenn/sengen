@@ -42,8 +42,6 @@ pub struct NounTypeRates {
     pub countable: f32,
     pub uncountable: f32,
     pub collective: f32,
-    pub singular: f32,
-    pub plural: f32,
 }
 impl Rates for NounTypeRates {
     fn add_up(&self) -> bool {
@@ -57,8 +55,6 @@ impl Rates for NounTypeRates {
             + self.countable
             + self.uncountable
             + self.collective
-            + self.singular
-            + self.plural
     }
 }
 
