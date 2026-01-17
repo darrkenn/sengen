@@ -1,8 +1,8 @@
 use crate::{
     chromosome::Chromosome,
     rates::{
-        AdjectiveTypeRates, AdverbTypeRates, ConjunctionTypeRates, DeterminerTypeRates,
-        NounTypeRates, PrepositionTypeRates, Rates, VerbTypeRates, WordTypeRates,
+        AdjectiveTypeRates, AdverbTypeRates, ConjunctionTypeRates, DeterminerTypeRates, NounRates,
+        NounTypeRates, PrepositionTypeRates, Rates, VerbTypeRates, WordTypeRates, check_rates,
     },
     structures::{
         WORD_COUNT_STRUCTURE_EIGHT, WORD_COUNT_STRUCTURE_FIVE, WORD_COUNT_STRUCTURE_FOUR,
@@ -18,7 +18,7 @@ use genetica::{
 use lazy_static::lazy_static;
 use rayon::iter::{IntoParallelRefMutIterator, ParallelIterator};
 use serde::Deserialize;
-use std::{fs, process};
+use std::{fs, ops::Deref, process, sync::Arc};
 
 mod chromosome;
 mod rates;
@@ -84,7 +84,7 @@ pub struct Config {
     pub word_count: usize,
 
     pub word_type_rates: WordTypeRates,
-    pub noun_type_rates: NounTypeRates,
+    pub noun_rates: NounRates,
     pub verb_type_rates: VerbTypeRates,
     pub adverb_type_rates: AdverbTypeRates,
     pub adjective_type_rates: AdjectiveTypeRates,
@@ -105,70 +105,20 @@ pub enum WordType {
 }
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
-    if !CONFIG.word_type_rates.add_up() {
-        eprintln!(
-            "Word type rates don't add up to be under 1.00. Total = {}",
-            CONFIG.word_type_rates.total()
-        );
-        process::exit(1)
-    }
-    if !CONFIG.noun_type_rates.add_up() {
-        eprintln!(
-            "Noun type rates don't add up to be under 1.00. Total = {}",
-            CONFIG.noun_type_rates.total()
-        );
-        process::exit(1)
-    }
-    if !CONFIG.verb_type_rates.add_up() {
-        eprintln!(
-            "Verb type rates don't add up to be under 1.00. Total = {}",
-            CONFIG.verb_type_rates.total()
-        );
-        process::exit(1)
-    }
-    if !CONFIG.adverb_type_rates.add_up() {
-        eprintln!(
-            "Adverb type rates don't add up to be under 1.00. Total = {}",
-            CONFIG.verb_type_rates.total()
-        );
-        process::exit(1)
-    }
-    if !CONFIG.adjective_type_rates.add_up() {
-        eprintln!(
-            "Adjective type rates don't add up to be under 1.00. Total = {}",
-            CONFIG.adjective_type_rates.total()
-        );
-        process::exit(1)
-    }
-    if !CONFIG.preposition_type_rates.add_up() {
-        eprintln!(
-            "Preposition type rates don't add up to be under 1.00. Total = {}",
-            CONFIG.preposition_type_rates.total()
-        );
-        process::exit(1)
-    }
-    if !CONFIG.determiner_type_rates.add_up() {
-        eprintln!(
-            "Determiner type rates don't add up to be under 1.00. Total = {}",
-            CONFIG.determiner_type_rates.total()
-        );
-        process::exit(1)
-    }
-    if !CONFIG.conjunction_type_rates.add_up() {
-        eprintln!(
-            "Conjunction type rate don't add up to be under 1.00. Total = {}",
-            CONFIG.conjunction_type_rates.total()
-        );
-        process::exit(1)
-    }
+    check_rates("Word type", &CONFIG.word_type_rates);
+    check_rates("Noun type", &CONFIG.noun_rates.type_rates);
+    check_rates("Noun tangibility", &CONFIG.noun_rates.tangibility_rates);
+    check_rates("Noun countability", &CONFIG.noun_rates.countability_rates);
+    check_rates("Verb type", &CONFIG.verb_type_rates);
+    check_rates("Adverb type", &CONFIG.adverb_type_rates);
+    check_rates("Adjective type", &CONFIG.adjective_type_rates);
+    check_rates("Preposition type", &CONFIG.preposition_type_rates);
+    check_rates("Determiner type", &CONFIG.determiner_type_rates);
+    check_rates("Conjunction type", &CONFIG.conjunction_type_rates);
 
     let mut population: Vec<Chromosome> = generate_population(CONFIG.population_count);
 
     for _ in 0..CONFIG.generations {
-        population
-            .par_iter_mut()
-            .for_each(|c| c.calculate_fitness());
-        sort_population_descending(&mut population);
         let parent1 = &population[0];
         let parent2 = &population[1];
         let (mut child1, mut child2) =
@@ -183,11 +133,41 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         new_population.push(parent1.clone());
         new_population.push(parent2.clone());
         population = new_population;
+        population
+            .par_iter_mut()
+            .for_each(|c| c.calculate_fitness());
+        sort_population_descending(&mut population);
     }
 
     sort_population_descending(&mut population);
     let best = &population[0];
-    println!("{best:?}");
+    let sentence = construct_sentence(best);
+    println!("{sentence}");
 
     Ok(())
+}
+
+fn construct_sentence(chromosome: &Chromosome) -> String {
+    let mut words = chromosome
+        .genes
+        .iter()
+        .map(|g| g.word.get_word().to_string())
+        .collect::<Vec<String>>();
+    words[0] = capitalize(&words[0]);
+    let mut sentence = words.join(" ");
+    sentence.push_str(".");
+    sentence
+}
+
+fn capitalize(word: &str) -> String {
+    let mut chars = word.chars();
+    match chars.next() {
+        None => String::new(),
+        Some(fl) => {
+            let mut capitalized_word = String::new();
+            capitalized_word.push(fl.to_ascii_uppercase());
+            capitalized_word.extend(chars);
+            capitalized_word
+        }
+    }
 }

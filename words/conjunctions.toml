@@ -1,1 +1,27 @@
-words = []
+words = [
+  # Coordinating
+  { word = "for", type = "Coordinating" },
+  { word = "and", type = "Coordinating" },
+  { word = "nor", type = "Coordinating" },
+  { word = "but", type = "Coordinating" },
+  { word = "or", type = "Coordinating" },
+  { word = "yet", type = "Coordinating" },
+  { word = "so", type = "Coordinating" },
+
+  # Subordinating
+  { word = "until", type = "Subordinating" },
+  { word = "wherever", type = "Subordinating" },
+  { word = "because", type = "Subordinating" },
+  { word = "if", type = "Subordinating" },
+  { word = "before", type = "Subordinating" },
+  { word = "as", type = "Subordinating" },
+
+  # Correlative
+  { word = "both", pair = "and", type = "Correlative" },
+  { word = "either", pair = "or", type = "Correlative" },
+  { word = "hardly", pair = "when", type = "Correlative" },
+  { word = "if", pair = "then", type = "Correlative" },
+  { word = "neither", pair = "nor", type = "Correlative" },
+  { word = "rather", pair = "or", type = "Correlative" },
+  { word = "whether", pair = "or", type = "Correlative" },
+]

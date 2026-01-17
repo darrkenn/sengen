@@ -1,11 +1,67 @@
 words = [
-  "quickly",
-  "excitedly",
-  "slowly",
-  "happily",
-  "loudly",
-  "softly",
-  "sweetly",
-  "carefully",
-  "eagerly",
+  # Time
+  { word = "now", type = "Time" },
+  { word = "yesterday", type = "Time" },
+  { word = "tomorrow", type = "Time" },
+  { word = "soon", type = "Time" },
+  { word = "early", type = "Time" },
+  { word = "late", type = "Time" },
+  { word = "later", type = "Time" },
+  { word = "afterward", type = "Time" },
+  { word = "eventually", type = "Time" },
+
+  # Frequency
+  { word = "always", type = "Frequency" },
+  { word = "often", type = "Frequency" },
+  { word = "sometimes", type = "Frequency" },
+  { word = "rarely", type = "Frequency" },
+  { word = "never", type = "Frequency" },
+
+  # Place
+  { word = "here", type = "Place" },
+  { word = "there", type = "Place" },
+  { word = "everywhere", type = "Place" },
+  { word = "nowhere", type = "Place" },
+  { word = "somewhere", type = "Place" },
+  { word = "anywhere", type = "Place" },
+  { word = "above", type = "Place" },
+  { word = "below", type = "Place" },
+  { word = "nearby", type = "Place" },
+  { word = "far", type = "Place" },
+
+  # Degree
+  { word = "very", type = "Degree" },
+  { word = "too", type = "Degree" },
+  { word = "quite", type = "Degree" },
+  { word = "almost", type = "Degree" },
+  { word = "enough", type = "Degree" },
+  { word = "so", type = "Degree" },
+  { word = "extremely", type = "Degree" },
+  { word = "fairly", type = "Degree" },
+  { word = "rather", type = "Degree" },
+
+  # Manner
+  { word = "calmly", type = "Manner" },
+  { word = "loudly", type = "Manner" },
+  { word = "perfectly", type = "Manner" },
+  { word = "angrily", type = "Manner" },
+  { word = "easily", type = "Manner" },
+  { word = "happily", type = "Manner" },
+  { word = "dryly", type = "Manner" },
+  { word = "shyly", type = "Manner" },
+  { word = "slyly", type = "Manner" },
+  { word = "gently", type = "Manner" },
+
+  # Conjunctive
+  { word = "however", type = "Conjunctive" },
+  { word = "therefore", type = "Conjunctive" },
+  { word = "moreover", type = "Conjunctive" },
+  { word = "meanwhile", type = "Conjunctive" },
+  { word = "nevertheless", type = "Conjunctive" },
+  { word = "furthermore", type = "Conjunctive" },
+  { word = "consequently", type = "Conjunctive" },
+  { word = "otherwise", type = "Conjunctive" },
+  { word = "similarily", type = "Conjunctive" },
+  { word = "hence", type = "Conjunctive" },
+
 ]

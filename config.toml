@@ -1,4 +1,4 @@
-generations = 1000
+generations = 100
 population_count = 250
 crossover_probability = 0.5
 mutation_probability = 0.05
@@ -15,14 +15,17 @@ preposition = 0.10
 determiner = 0.10
 conjunction = 0.10
 
-[noun_type_rates]
-common = 0.142
-proper = 0.142
-concrete = 0.142
-abstract = 0.142
-countable = 0.142
-uncountable = 0.142
-collective = 0.142
+[noun_rates]
+[noun_rates.type_rates]
+common = 0.45
+proper = 0.28
+collective = 0.27
+[noun_rates.tangibility_rates]
+concrete = 0.55
+abstract = 0.45
+[noun_rates.countability_rates]
+countable = 0.50
+uncountable = 0.50
 
 [verb_type_rates]
 action = 0.11

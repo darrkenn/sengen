@@ -1,14 +1,20 @@
-use std::{fmt::Debug, ops::DerefMut, process, sync::Arc};
+use std::{
+    fmt::{Debug, Display},
+    ops::DerefMut,
+    process,
+    sync::Arc,
+};
 
 use lazy_static::lazy_static;
 use serde::Deserialize;
 
-use crate::{CONFIG, WordType};
+use crate::{CONFIG, WordType, rates::Rates};
 
 pub trait Word: Send + Sync + Debug {
     fn word_type() -> WordType
     where
         Self: Sized;
+    fn get_word(&self) -> &str;
 }
 
 pub trait Collection<T, B>
@@ -26,15 +32,23 @@ pub enum Number {
     Singular,
     Plural,
 }
+#[derive(Deserialize, PartialEq, Debug, Clone)]
+pub enum Tangibility {
+    Concrete,
+    Abstract,
+}
+#[derive(Deserialize, PartialEq, Debug, Clone)]
+pub enum Countability {
+    Countable,
+    Uncountable,
+    Both,
+}
+
 // Noun
 #[derive(Deserialize, PartialEq, Debug, Clone)]
 pub enum NounType {
     Common,
     Proper,
-    Concrete,
-    Abstract,
-    Countable,
-    Uncountable,
     Collective,
 }
 
@@ -43,6 +57,8 @@ pub struct Noun {
     pub word: String,
     pub r#type: NounType,
     pub number: Number,
+    pub tangibility: Tangibility,
+    pub countability: Countability,
 }
 
 // Impl Word for both Noun and &Noun seems stupid but its the least complicated way
@@ -53,6 +69,9 @@ impl Word for Noun {
     {
         WordType::Noun
     }
+    fn get_word(&self) -> &str {
+        &self.word
+    }
 }
 impl Word for &Noun {
     fn word_type() -> WordType
@@ -60,6 +79,9 @@ impl Word for &Noun {
         Self: Sized,
     {
         WordType::Noun
+    }
+    fn get_word(&self) -> &str {
+        &self.word
     }
 }
 
@@ -89,6 +111,9 @@ impl Word for Verb {
     {
         WordType::Verb
     }
+    fn get_word(&self) -> &str {
+        &self.word
+    }
 }
 
 impl Word for &Verb {
@@ -97,6 +122,9 @@ impl Word for &Verb {
         Self: Sized,
     {
         WordType::Verb
+    }
+    fn get_word(&self) -> &str {
+        &self.word
     }
 }
 
@@ -124,6 +152,9 @@ impl Word for Adverb {
     {
         WordType::Adverb
     }
+    fn get_word(&self) -> &str {
+        &self.word
+    }
 }
 
 impl Word for &Adverb {
@@ -132,6 +163,9 @@ impl Word for &Adverb {
         Self: Sized,
     {
         WordType::Adverb
+    }
+    fn get_word(&self) -> &str {
+        &self.word
     }
 }
 
@@ -161,6 +195,9 @@ impl Word for Adjective {
     {
         WordType::Adjective
     }
+    fn get_word(&self) -> &str {
+        &self.word
+    }
 }
 
 impl Word for &Adjective {
@@ -169,6 +206,9 @@ impl Word for &Adjective {
         Self: Sized,
     {
         WordType::Adjective
+    }
+    fn get_word(&self) -> &str {
+        &self.word
     }
 }
 
@@ -194,6 +234,9 @@ impl Word for Preposition {
     {
         WordType::Preposition
     }
+    fn get_word(&self) -> &str {
+        &self.word
+    }
 }
 
 impl Word for &Preposition {
@@ -202,6 +245,9 @@ impl Word for &Preposition {
         Self: Sized,
     {
         WordType::Preposition
+    }
+    fn get_word(&self) -> &str {
+        &self.word
     }
 }
 
@@ -231,6 +277,9 @@ impl Word for Determiner {
     {
         WordType::Determiner
     }
+    fn get_word(&self) -> &str {
+        &self.word
+    }
 }
 
 impl Word for &Determiner {
@@ -239,6 +288,9 @@ impl Word for &Determiner {
         Self: Sized,
     {
         WordType::Determiner
+    }
+    fn get_word(&self) -> &str {
+        &self.word
     }
 }
 
@@ -253,6 +305,7 @@ pub enum ConjunctionType {
 pub struct Conjunction {
     pub word: String,
     pub r#type: ConjunctionType,
+    pub pair: Option<String>,
 }
 
 impl Word for Conjunction {
@@ -261,6 +314,9 @@ impl Word for Conjunction {
         Self: Sized,
     {
         WordType::Conjunction
+    }
+    fn get_word(&self) -> &str {
+        &self.word
     }
 }
 
@@ -271,6 +327,9 @@ impl Word for &Conjunction {
     {
         WordType::Conjunction
     }
+    fn get_word(&self) -> &str {
+        &self.word
+    }
 }
 
 // Collection of nouns
@@ -278,7 +337,7 @@ impl Word for &Conjunction {
 pub struct Nouns {
     pub words: Vec<Noun>,
     #[serde(skip)]
-    pub thresholds: Option<[(f32, NounType); 7]>,
+    pub thresholds: Option<[(f32, NounType); 3]>,
 }
 impl Collection<Noun, NounType> for Nouns {
     fn select(&self) -> Arc<dyn Word + '_> {
@@ -300,16 +359,12 @@ impl Collection<Noun, NounType> for Nouns {
         self.words.iter().find(|noun| &noun.r#type == r#type)
     }
     fn calculate_thresholds(&mut self) {
-        let rates = CONFIG.noun_type_rates;
+        let rates = CONFIG.noun_rates.type_rates;
         #[rustfmt::skip]
-        let thresholds: [(f32, NounType); 7] = [
-            (rates.r#abstract, NounType::Abstract),
-            (rates.r#abstract + rates.proper, NounType::Proper),
-            (rates.r#abstract + rates.proper + rates.concrete,NounType::Concrete,),
-            (rates.r#abstract + rates.proper + rates.concrete + rates.uncountable, NounType::Uncountable),
-            (rates.r#abstract + rates.proper + rates.concrete + rates.uncountable + rates.common, NounType::Common),
-            (rates.r#abstract + rates.proper + rates.concrete + rates.uncountable + rates.common + rates.collective,NounType::Collective),
-            (rates.r#abstract + rates.proper + rates.concrete + rates.uncountable + rates.common + rates.collective + rates.countable,NounType::Countable),
+        let thresholds: [(f32, NounType); 3] = [
+            (rates.common, NounType::Common),
+            (rates.common + rates.proper, NounType::Proper),
+            (rates.common + rates.proper + rates.collective, NounType::Collective)
         ];
         self.thresholds = Some(thresholds)
     }

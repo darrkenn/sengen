@@ -1,1 +1,50 @@
-words = []
+words = [
+  # Article
+  { word = "the", type = "Article" },
+  { word = "a", type = "Article" },
+  { word = "an", type = "Article" },
+  # Demonstrative
+  { word = "This", type = "Demonstrative" },
+  { word = "That", type = "Demonstrative" },
+  { word = "Those", type = "Demonstrative" },
+  { word = "These", type = "Demonstrative" },
+  # Distributive
+  { word = "each", type = "Distributive" },
+  { word = "every", type = "Distributive" },
+  { word = "either", type = "Distributive" },
+  { word = "neither", type = "Distributive" },
+  { word = "any", type = "Distributive" },
+  { word = "all", type = "Distributive" },
+  { word = "both", type = "Distributive" },
+  { word = "half", type = "Distributive" },
+  # Interrogative
+  { word = "what", type = "Interrogative" },
+  { word = "which", type = "Interrogative" },
+  { word = "whose", type = "Interrogative" },
+  # Possessive
+  { word = "my", type = "Possessive" },
+  { word = "your", type = "Possessive" },
+  { word = "his", type = "Possessive" },
+  { word = "her", type = "Possessive" },
+  { word = "its", type = "Possessive" },
+  { word = "our", type = "Possessive" },
+  { word = "their", type = "Possessive" },
+  { word = "whose", type = "Possessive" },
+  # Quantifier
+  { word = "many", type = "Quantifier" },
+  { word = "few", type = "Quantifier" },
+  { word = "several", type = "Quantifier" },
+  { word = "little", type = "Quantifier" },
+  { word = "no", type = "Quantifier" },
+  # Relative
+  { word = "who", type = "Relative" },
+  { word = "whom", type = "Relative" },
+  { word = "that", type = "Relative" },
+  # Negative
+  { word = "no", type = "Negative" },
+  { word = "none", type = "Negative" },
+  { word = "not", type = "Negative" },
+  { word = "neither", type = "Negative" },
+  { word = "nor", type = "Negative" },
+
+]

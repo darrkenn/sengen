@@ -1,3 +1,6 @@
+use core::fmt;
+use std::os::unix::process;
+
 use serde::Deserialize;
 
 use crate::words::Noun;
@@ -34,13 +37,16 @@ impl Rates for WordTypeRates {
 }
 
 #[derive(Deserialize, Debug, Clone, Copy)]
+pub struct NounRates {
+    pub type_rates: NounTypeRates,
+    pub tangibility_rates: NounTangibilityRates,
+    pub countability_rates: NounCountabilityRates,
+}
+
+#[derive(Deserialize, Debug, Clone, Copy)]
 pub struct NounTypeRates {
     pub common: f32,
     pub proper: f32,
-    pub concrete: f32,
-    pub r#abstract: f32,
-    pub countable: f32,
-    pub uncountable: f32,
     pub collective: f32,
 }
 impl Rates for NounTypeRates {
@@ -48,13 +54,33 @@ impl Rates for NounTypeRates {
         self.total().floor() <= 1.00
     }
     fn total(&self) -> f32 {
-        self.common
-            + self.proper
-            + self.concrete
-            + self.r#abstract
-            + self.countable
-            + self.uncountable
-            + self.collective
+        self.common + self.proper + self.collective
+    }
+}
+#[derive(Deserialize, Debug, Clone, Copy)]
+pub struct NounTangibilityRates {
+    pub concrete: f32,
+    pub r#abstract: f32,
+}
+impl Rates for NounTangibilityRates {
+    fn add_up(&self) -> bool {
+        self.total().floor() <= 1.00
+    }
+    fn total(&self) -> f32 {
+        self.concrete + self.concrete
+    }
+}
+#[derive(Deserialize, Debug, Clone, Copy)]
+pub struct NounCountabilityRates {
+    pub countable: f32,
+    pub uncountable: f32,
+}
+impl Rates for NounCountabilityRates {
+    fn add_up(&self) -> bool {
+        self.total().floor() <= 1.00
+    }
+    fn total(&self) -> f32 {
+        self.countable + self.uncountable
     }
 }
 
@@ -189,5 +215,18 @@ impl Rates for ConjunctionTypeRates {
     }
     fn total(&self) -> f32 {
         self.subordinating + self.coordinating + self.correlative
+    }
+}
+
+pub fn check_rates<'a, B>(name: &'a str, rates: &B)
+where
+    B: Rates,
+{
+    if !rates.add_up() {
+        eprintln!(
+            "{name:#}  rates don't add up to be under 1.00 Total = {}",
+            rates.total()
+        );
+        std::process::exit(1);
     }
 }

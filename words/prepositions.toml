@@ -1,1 +1,39 @@
-words = []
+words = [
+  # Place
+  { word = "behind", type = "Place" },
+  { word = "between", type = "Place" },
+  { word = "beside", type = "Place" },
+  { word = "under", type = "Place" },
+  { word = "above", type = "Place" },
+  { word = "past", type = "Place" },
+  { word = "inside", type = "Place" },
+  { word = "outside", type = "Place" },
+  { word = "against", type = "Place" },
+  { word = "below", type = "Place" },
+  { word = "on", type = "Place" },
+  { word = "in", type = "Place" },
+  { word = "at", type = "Place" },
+  # Time
+  { word = "at", type = "Time" },
+  { word = "in", type = "Time" },
+  { word = "on", type = "Time" },
+  # Movement
+  { word = "into", type = "Movement" },
+  { word = "towards", type = "Movement" },
+  { word = "through", type = "Movement" },
+  { word = "up", type = "Movement" },
+  { word = "down", type = "Movement" },
+  { word = "over", type = "Movement" },
+  { word = "past", type = "Movement" },
+  { word = "off", type = "Movement" },
+  { word = "around", type = "Movement" },
+  { word = "across", type = "Movement" },
+  { word = "from", type = "Movement" },
+  { word = "to", type = "Movement" },
+  # Purpose
+  { word = "by", type = "Purpose" },
+  { word = "like", type = "Purpose" },
+  { word = "for", type = "Purpose" },
+  { word = "in", type = "Purpose" },
+  { word = "with", type = "Purpose" },
+]

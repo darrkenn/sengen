@@ -80,7 +80,7 @@ impl Individual for Chromosome {
         &mut self.fitness
     }
     fn calculate_fitness(&mut self) {
-        self.fitness = Some(0.0)
+        self.fitness = Some(rand::random_range(0.00..1.00))
     }
 }
 
