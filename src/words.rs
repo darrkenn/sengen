@@ -1,19 +1,12 @@
-use std::{
-    fmt::{Debug, Display},
-    ops::DerefMut,
-    process,
-    sync::Arc,
-};
+use std::{fmt::Debug, process, sync::Arc};
 
 use lazy_static::lazy_static;
 use serde::Deserialize;
 
-use crate::{CONFIG, WordType, rates::Rates};
+use crate::{CONFIG, WordType};
 
 pub trait Word: Send + Sync + Debug {
-    fn word_type() -> WordType
-    where
-        Self: Sized;
+    fn word_type(&self) -> WordType;
     fn get_word(&self) -> &str;
 }
 
@@ -63,7 +56,7 @@ pub struct Noun {
 
 // Impl Word for both Noun and &Noun seems stupid but its the least complicated way
 impl Word for Noun {
-    fn word_type() -> WordType
+    fn word_type(&self) -> WordType
     where
         Self: Sized,
     {
@@ -74,7 +67,7 @@ impl Word for Noun {
     }
 }
 impl Word for &Noun {
-    fn word_type() -> WordType
+    fn word_type(&self) -> WordType
     where
         Self: Sized,
     {
@@ -105,7 +98,7 @@ pub struct Verb {
 }
 
 impl Word for Verb {
-    fn word_type() -> WordType
+    fn word_type(&self) -> WordType
     where
         Self: Sized,
     {
@@ -117,7 +110,7 @@ impl Word for Verb {
 }
 
 impl Word for &Verb {
-    fn word_type() -> WordType
+    fn word_type(&self) -> WordType
     where
         Self: Sized,
     {
@@ -146,7 +139,7 @@ pub struct Adverb {
 }
 
 impl Word for Adverb {
-    fn word_type() -> WordType
+    fn word_type(&self) -> WordType
     where
         Self: Sized,
     {
@@ -158,7 +151,7 @@ impl Word for Adverb {
 }
 
 impl Word for &Adverb {
-    fn word_type() -> WordType
+    fn word_type(&self) -> WordType
     where
         Self: Sized,
     {
@@ -189,7 +182,7 @@ pub struct Adjective {
 }
 
 impl Word for Adjective {
-    fn word_type() -> WordType
+    fn word_type(&self) -> WordType
     where
         Self: Sized,
     {
@@ -201,7 +194,7 @@ impl Word for Adjective {
 }
 
 impl Word for &Adjective {
-    fn word_type() -> WordType
+    fn word_type(&self) -> WordType
     where
         Self: Sized,
     {
@@ -228,7 +221,7 @@ pub struct Preposition {
 }
 
 impl Word for Preposition {
-    fn word_type() -> WordType
+    fn word_type(&self) -> WordType
     where
         Self: Sized,
     {
@@ -240,7 +233,7 @@ impl Word for Preposition {
 }
 
 impl Word for &Preposition {
-    fn word_type() -> WordType
+    fn word_type(&self) -> WordType
     where
         Self: Sized,
     {
@@ -271,7 +264,7 @@ pub struct Determiner {
 }
 
 impl Word for Determiner {
-    fn word_type() -> WordType
+    fn word_type(&self) -> WordType
     where
         Self: Sized,
     {
@@ -283,7 +276,7 @@ impl Word for Determiner {
 }
 
 impl Word for &Determiner {
-    fn word_type() -> WordType
+    fn word_type(&self) -> WordType
     where
         Self: Sized,
     {
@@ -309,7 +302,7 @@ pub struct Conjunction {
 }
 
 impl Word for Conjunction {
-    fn word_type() -> WordType
+    fn word_type(&self) -> WordType
     where
         Self: Sized,
     {
@@ -321,7 +314,7 @@ impl Word for Conjunction {
 }
 
 impl Word for &Conjunction {
-    fn word_type() -> WordType
+    fn word_type(&self) -> WordType
     where
         Self: Sized,
     {

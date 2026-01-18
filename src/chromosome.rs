@@ -4,7 +4,7 @@ use genetica::individual::{DynamicLengthIndividual, Generate, Individual, Mutate
 use rand::random_range;
 
 use crate::{
-    CONFIG, WORD_THRESHOLDS, WordType,
+    CONFIG, STRUCTURE, WORD_THRESHOLDS, WordType,
     words::{
         ADJECTIVES, ADVERBS, CONJUNCTIONS, Collection, DETERMINERS, NOUNS, PREPOSITIONS, VERBS,
         Word,
@@ -80,7 +80,14 @@ impl Individual for Chromosome {
         &mut self.fitness
     }
     fn calculate_fitness(&mut self) {
-        self.fitness = Some(rand::random_range(0.00..1.00))
+        let structure_error_count: f32 = STRUCTURE
+            .iter()
+            .zip(&self.genes)
+            .filter(|(wt, gt)| gt.word.word_type() != **wt)
+            .count() as f32;
+        let structure_fitness: f32 = 1.0 * (1.0 / (structure_error_count + 1.0));
+        let fitness = structure_fitness;
+        self.fitness = Some(fitness)
     }
 }
 

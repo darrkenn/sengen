@@ -1,4 +1,4 @@
-generations = 100
+generations = 1000
 population_count = 250
 crossover_probability = 0.5
 mutation_probability = 0.05

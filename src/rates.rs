@@ -1,9 +1,4 @@
-use core::fmt;
-use std::os::unix::process;
-
 use serde::Deserialize;
-
-use crate::words::Noun;
 
 pub trait Rates {
     fn add_up(&self) -> bool;

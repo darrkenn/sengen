@@ -2,23 +2,23 @@ use crate::{
     chromosome::Chromosome,
     rates::{
         AdjectiveTypeRates, AdverbTypeRates, ConjunctionTypeRates, DeterminerTypeRates, NounRates,
-        NounTypeRates, PrepositionTypeRates, Rates, VerbTypeRates, WordTypeRates, check_rates,
+        PrepositionTypeRates, VerbTypeRates, WordTypeRates, check_rates,
     },
     structures::{
         WORD_COUNT_STRUCTURE_EIGHT, WORD_COUNT_STRUCTURE_FIVE, WORD_COUNT_STRUCTURE_FOUR,
         WORD_COUNT_STRUCTURE_SEVEN, WORD_COUNT_STRUCTURE_SIX, WORD_COUNT_STRUCTURE_THREE,
     },
-    words::{Collection, NOUNS, Word},
+    words::{Collection, NOUNS, Noun, Word},
 };
 use genetica::{
     crossover::dynamic_length_single_point_crossover,
-    individual::{Generate, Individual},
-    population::{self, generate_population, sort_population_descending},
+    individual::Individual,
+    population::{generate_population, sort_population_descending},
 };
 use lazy_static::lazy_static;
 use rayon::iter::{IntoParallelRefMutIterator, ParallelIterator};
 use serde::Deserialize;
-use std::{fs, ops::Deref, process, sync::Arc};
+use std::{fs, process, sync::Arc};
 
 mod chromosome;
 mod rates;
@@ -142,6 +142,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     sort_population_descending(&mut population);
     let best = &population[0];
     let sentence = construct_sentence(best);
+    println!("Fitness: {}", best.fitness.unwrap_or(0.00));
     println!("{sentence}");
 
     Ok(())
