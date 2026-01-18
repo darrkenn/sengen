@@ -8,7 +8,6 @@ use crate::{
         WORD_COUNT_STRUCTURE_EIGHT, WORD_COUNT_STRUCTURE_FIVE, WORD_COUNT_STRUCTURE_FOUR,
         WORD_COUNT_STRUCTURE_SEVEN, WORD_COUNT_STRUCTURE_SIX, WORD_COUNT_STRUCTURE_THREE,
     },
-    words::{Collection, NOUNS, Noun, Word},
 };
 use genetica::{
     crossover::dynamic_length_single_point_crossover,
@@ -18,7 +17,7 @@ use genetica::{
 use lazy_static::lazy_static;
 use rayon::iter::{IntoParallelRefMutIterator, ParallelIterator};
 use serde::Deserialize;
-use std::{fs, process, sync::Arc};
+use std::{fs, process};
 
 mod chromosome;
 mod rates;

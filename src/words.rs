@@ -349,7 +349,12 @@ impl Collection<Noun, NounType> for Nouns {
         }
     }
     fn find_of_type(&self, r#type: &NounType) -> Option<&Noun> {
-        self.words.iter().find(|noun| &noun.r#type == r#type)
+        loop {
+            let word = &self.words[rand::random_range(0..self.words.len())];
+            if &word.r#type == r#type {
+                return Some(word);
+            };
+        }
     }
     fn calculate_thresholds(&mut self) {
         let rates = CONFIG.noun_rates.type_rates;
@@ -387,7 +392,12 @@ impl Collection<Verb, VerbType> for Verbs {
         }
     }
     fn find_of_type(&self, r#type: &VerbType) -> Option<&Verb> {
-        self.words.iter().find(|verb| &verb.r#type == r#type)
+        loop {
+            let word = &self.words[rand::random_range(0..self.words.len())];
+            if &word.r#type == r#type {
+                return Some(word);
+            };
+        }
     }
     fn calculate_thresholds(&mut self) {
         let rates = CONFIG.verb_type_rates;
@@ -430,7 +440,12 @@ impl Collection<Adverb, AdverbType> for Adverbs {
         }
     }
     fn find_of_type(&self, r#type: &AdverbType) -> Option<&Adverb> {
-        self.words.iter().find(|adverb| &adverb.r#type == r#type)
+        loop {
+            let word = &self.words[rand::random_range(0..self.words.len())];
+            if &word.r#type == r#type {
+                return Some(word);
+            };
+        }
     }
     fn calculate_thresholds(&mut self) {
         let rates = CONFIG.adverb_type_rates;
@@ -470,7 +485,12 @@ impl Collection<Adjective, AdjectiveType> for Adjectives {
         }
     }
     fn find_of_type(&self, r#type: &AdjectiveType) -> Option<&Adjective> {
-        self.words.iter().find(|adj| &adj.r#type == r#type)
+        loop {
+            let word = &self.words[rand::random_range(0..self.words.len())];
+            if &word.r#type == r#type {
+                return Some(word);
+            };
+        }
     }
     fn calculate_thresholds(&mut self) {
         let rates = CONFIG.adjective_type_rates;
@@ -512,7 +532,12 @@ impl Collection<Preposition, PrepositionType> for Prepositions {
         }
     }
     fn find_of_type(&self, r#type: &PrepositionType) -> Option<&Preposition> {
-        self.words.iter().find(|pre| &pre.r#type == r#type)
+        loop {
+            let word = &self.words[rand::random_range(0..self.words.len())];
+            if &word.r#type == r#type {
+                return Some(word);
+            };
+        }
     }
     fn calculate_thresholds(&mut self) {
         let rates = CONFIG.preposition_type_rates;
@@ -550,7 +575,12 @@ impl Collection<Determiner, DeterminerType> for Determiners {
         }
     }
     fn find_of_type(&self, r#type: &DeterminerType) -> Option<&Determiner> {
-        self.words.iter().find(|det| &det.r#type == r#type)
+        loop {
+            let word = &self.words[rand::random_range(0..self.words.len())];
+            if &word.r#type == r#type {
+                return Some(word);
+            };
+        }
     }
     fn calculate_thresholds(&mut self) {
         let rates = CONFIG.determiner_type_rates;
@@ -591,7 +621,12 @@ impl Collection<Conjunction, ConjunctionType> for Conjunctions {
         }
     }
     fn find_of_type(&self, r#type: &ConjunctionType) -> Option<&Conjunction> {
-        self.words.iter().find(|con| &con.r#type == r#type)
+        loop {
+            let word = &self.words[rand::random_range(0..self.words.len())];
+            if &word.r#type == r#type {
+                return Some(word);
+            };
+        }
     }
     fn calculate_thresholds(&mut self) {
         let rates = CONFIG.conjunction_type_rates;
