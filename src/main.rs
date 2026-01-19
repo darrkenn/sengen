@@ -79,7 +79,9 @@ pub struct Config {
     pub crossover_probability: f32,
     pub mutation_probability: f32,
     pub use_structure_fitness: bool,
+    pub structure_weight: f32,
     pub use_grammar_fitness: bool,
+    pub grammar_weight: f32,
     pub word_count: usize,
 
     pub word_type_rates: WordTypeRates,

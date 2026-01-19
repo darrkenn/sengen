@@ -98,11 +98,9 @@ impl Individual for Chromosome {
                 previous_word = Some(gt.word.word_type());
             })
         };
-        let structure_fitness: f32 = 1.0 * (1.0 / (structure_error_count + 1.0));
-        let grammar_fitness: f32 = 1.0 / (grammar_count.abs() + 1.0);
-        let fitness = structure_fitness * grammar_fitness;
-
-        self.fitness = Some(fitness)
+        let structure_fitness: f32 = CONFIG.structure_weight / (structure_error_count + 1.0);
+        let grammar_fitness: f32 = (CONFIG.grammar_weight * (grammar_count + 1.0)).max(0.0);
+        self.fitness = Some(structure_fitness + grammar_fitness)
     }
 }
 
