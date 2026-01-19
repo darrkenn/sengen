@@ -1,5 +1,6 @@
 use std::{fmt::Debug, process, sync::Arc};
 
+use genetica::individual::Generate;
 use lazy_static::lazy_static;
 use serde::Deserialize;
 
@@ -8,6 +9,7 @@ use crate::{CONFIG, WordType};
 pub trait Word: Send + Sync + Debug {
     fn word_type(&self) -> WordType;
     fn get_word(&self) -> &str;
+    fn grammar(&self, previous_word_type: Option<WordType>) -> f32;
 }
 
 pub trait Collection<T, B>
@@ -65,6 +67,18 @@ impl Word for Noun {
     fn get_word(&self) -> &str {
         &self.word
     }
+    fn grammar(&self, previous_word_type: Option<WordType>) -> f32 {
+        let mut grammar_rating: f32 = 0.00;
+        if let Some(previous_word_type) = previous_word_type {
+            match previous_word_type {
+                WordType::Noun => grammar_rating -= 0.4,
+                WordType::Verb => grammar_rating -= 0.2,
+                WordType::Adverb => grammar_rating -= 0.3,
+                _ => {}
+            }
+        };
+        grammar_rating
+    }
 }
 impl Word for &Noun {
     fn word_type(&self) -> WordType
@@ -75,6 +89,18 @@ impl Word for &Noun {
     }
     fn get_word(&self) -> &str {
         &self.word
+    }
+    fn grammar(&self, previous_word_type: Option<WordType>) -> f32 {
+        let mut grammar_rating: f32 = 0.00;
+        if let Some(previous_word_type) = previous_word_type {
+            match previous_word_type {
+                WordType::Noun => grammar_rating -= 0.4,
+                WordType::Verb => grammar_rating -= 0.2,
+                WordType::Adverb => grammar_rating -= 0.3,
+                _ => {}
+            }
+        };
+        grammar_rating
     }
 }
 
@@ -107,6 +133,19 @@ impl Word for Verb {
     fn get_word(&self) -> &str {
         &self.word
     }
+    fn grammar(&self, previous_word_type: Option<WordType>) -> f32 {
+        let mut grammar_rating: f32 = 0.00;
+        if let Some(previous_word_type) = previous_word_type {
+            match previous_word_type {
+                WordType::Verb => grammar_rating -= 0.4,
+                WordType::Determiner => grammar_rating -= 0.3,
+                WordType::Preposition => grammar_rating -= 0.4,
+                WordType::Adjective => grammar_rating -= 0.2,
+                _ => {}
+            }
+        };
+        grammar_rating
+    }
 }
 
 impl Word for &Verb {
@@ -118,6 +157,19 @@ impl Word for &Verb {
     }
     fn get_word(&self) -> &str {
         &self.word
+    }
+    fn grammar(&self, previous_word_type: Option<WordType>) -> f32 {
+        let mut grammar_rating: f32 = 0.00;
+        if let Some(previous_word_type) = previous_word_type {
+            match previous_word_type {
+                WordType::Verb => grammar_rating -= 0.4,
+                WordType::Determiner => grammar_rating -= 0.3,
+                WordType::Preposition => grammar_rating -= 0.4,
+                WordType::Adjective => grammar_rating -= 0.2,
+                _ => {}
+            }
+        };
+        grammar_rating
     }
 }
 
@@ -148,6 +200,19 @@ impl Word for Adverb {
     fn get_word(&self) -> &str {
         &self.word
     }
+    fn grammar(&self, previous_word_type: Option<WordType>) -> f32 {
+        let mut grammar_rating: f32 = 0.00;
+        if let Some(previous_word_type) = previous_word_type {
+            match previous_word_type {
+                WordType::Noun => grammar_rating -= 0.5,
+                WordType::Adverb => grammar_rating -= 0.2,
+                WordType::Determiner => grammar_rating -= 0.5,
+                WordType::Preposition => grammar_rating -= 0.4,
+                _ => {}
+            }
+        };
+        grammar_rating
+    }
 }
 
 impl Word for &Adverb {
@@ -159,6 +224,19 @@ impl Word for &Adverb {
     }
     fn get_word(&self) -> &str {
         &self.word
+    }
+    fn grammar(&self, previous_word_type: Option<WordType>) -> f32 {
+        let mut grammar_rating: f32 = 0.00;
+        if let Some(previous_word_type) = previous_word_type {
+            match previous_word_type {
+                WordType::Noun => grammar_rating -= 0.5,
+                WordType::Adverb => grammar_rating -= 0.2,
+                WordType::Determiner => grammar_rating -= 0.5,
+                WordType::Preposition => grammar_rating -= 0.4,
+                _ => {}
+            }
+        };
+        grammar_rating
     }
 }
 
@@ -191,6 +269,18 @@ impl Word for Adjective {
     fn get_word(&self) -> &str {
         &self.word
     }
+    fn grammar(&self, previous_word_type: Option<WordType>) -> f32 {
+        let mut grammar_rating: f32 = 0.00;
+        if let Some(previous_word_type) = previous_word_type {
+            match previous_word_type {
+                WordType::Noun => grammar_rating -= 0.3,
+                WordType::Verb => grammar_rating -= 0.2,
+                WordType::Preposition => grammar_rating -= 0.4,
+                _ => {}
+            }
+        };
+        grammar_rating
+    }
 }
 
 impl Word for &Adjective {
@@ -202,6 +292,18 @@ impl Word for &Adjective {
     }
     fn get_word(&self) -> &str {
         &self.word
+    }
+    fn grammar(&self, previous_word_type: Option<WordType>) -> f32 {
+        let mut grammar_rating: f32 = 0.00;
+        if let Some(previous_word_type) = previous_word_type {
+            match previous_word_type {
+                WordType::Noun => grammar_rating -= 0.3,
+                WordType::Verb => grammar_rating -= 0.2,
+                WordType::Preposition => grammar_rating -= 0.4,
+                _ => {}
+            }
+        };
+        grammar_rating
     }
 }
 
@@ -230,6 +332,20 @@ impl Word for Preposition {
     fn get_word(&self) -> &str {
         &self.word
     }
+    fn grammar(&self, previous_word_type: Option<WordType>) -> f32 {
+        let mut grammar_rating: f32 = 0.00;
+        if let Some(previous_word_type) = previous_word_type {
+            match previous_word_type {
+                WordType::Verb => grammar_rating -= 0.1,
+                WordType::Adverb => grammar_rating -= 0.3,
+                WordType::Determiner => grammar_rating -= 0.5,
+                WordType::Preposition => grammar_rating -= 0.4,
+                WordType::Adjective => grammar_rating -= 0.2,
+                _ => {}
+            }
+        };
+        grammar_rating
+    }
 }
 
 impl Word for &Preposition {
@@ -241,6 +357,20 @@ impl Word for &Preposition {
     }
     fn get_word(&self) -> &str {
         &self.word
+    }
+    fn grammar(&self, previous_word_type: Option<WordType>) -> f32 {
+        let mut grammar_rating: f32 = 0.00;
+        if let Some(previous_word_type) = previous_word_type {
+            match previous_word_type {
+                WordType::Verb => grammar_rating -= 0.1,
+                WordType::Adverb => grammar_rating -= 0.3,
+                WordType::Determiner => grammar_rating -= 0.5,
+                WordType::Preposition => grammar_rating -= 0.4,
+                WordType::Adjective => grammar_rating -= 0.2,
+                _ => {}
+            }
+        };
+        grammar_rating
     }
 }
 
@@ -273,6 +403,20 @@ impl Word for Determiner {
     fn get_word(&self) -> &str {
         &self.word
     }
+    fn grammar(&self, previous_word_type: Option<WordType>) -> f32 {
+        let mut grammar_rating: f32 = 0.00;
+        if let Some(previous_word_type) = previous_word_type {
+            match previous_word_type {
+                WordType::Noun => grammar_rating -= 0.5,
+                WordType::Verb => grammar_rating -= 0.4,
+                WordType::Adverb => grammar_rating -= 0.3,
+                WordType::Determiner => grammar_rating -= 0.6,
+                WordType::Adjective => grammar_rating -= 0.3,
+                _ => {}
+            }
+        };
+        grammar_rating
+    }
 }
 
 impl Word for &Determiner {
@@ -284,6 +428,20 @@ impl Word for &Determiner {
     }
     fn get_word(&self) -> &str {
         &self.word
+    }
+    fn grammar(&self, previous_word_type: Option<WordType>) -> f32 {
+        let mut grammar_rating: f32 = 0.00;
+        if let Some(previous_word_type) = previous_word_type {
+            match previous_word_type {
+                WordType::Noun => grammar_rating -= 0.5,
+                WordType::Verb => grammar_rating -= 0.4,
+                WordType::Adverb => grammar_rating -= 0.3,
+                WordType::Determiner => grammar_rating -= 0.6,
+                WordType::Adjective => grammar_rating -= 0.3,
+                _ => {}
+            }
+        };
+        grammar_rating
     }
 }
 
@@ -311,6 +469,19 @@ impl Word for Conjunction {
     fn get_word(&self) -> &str {
         &self.word
     }
+    fn grammar(&self, previous_word_type: Option<WordType>) -> f32 {
+        let mut grammar_rating: f32 = 0.00;
+        if let Some(previous_word_type) = previous_word_type {
+            match previous_word_type {
+                WordType::Adverb => grammar_rating -= 0.2,
+                WordType::Determiner => grammar_rating -= 0.5,
+                WordType::Preposition => grammar_rating -= 0.3,
+                WordType::Conjunction => grammar_rating -= 0.4,
+                _ => {}
+            }
+        };
+        grammar_rating
+    }
 }
 
 impl Word for &Conjunction {
@@ -322,6 +493,19 @@ impl Word for &Conjunction {
     }
     fn get_word(&self) -> &str {
         &self.word
+    }
+    fn grammar(&self, previous_word_type: Option<WordType>) -> f32 {
+        let mut grammar_rating: f32 = 0.00;
+        if let Some(previous_word_type) = previous_word_type {
+            match previous_word_type {
+                WordType::Adverb => grammar_rating -= 0.2,
+                WordType::Determiner => grammar_rating -= 0.5,
+                WordType::Preposition => grammar_rating -= 0.3,
+                WordType::Conjunction => grammar_rating -= 0.4,
+                _ => {}
+            }
+        };
+        grammar_rating
     }
 }
 

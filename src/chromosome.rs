@@ -80,13 +80,28 @@ impl Individual for Chromosome {
         &mut self.fitness
     }
     fn calculate_fitness(&mut self) {
-        let structure_error_count: f32 = STRUCTURE
-            .iter()
-            .zip(&self.genes)
-            .filter(|(wt, gt)| gt.word.word_type() != **wt)
-            .count() as f32;
+        let structure_error_count: f32 = if CONFIG.use_structure_fitness {
+            STRUCTURE
+                .iter()
+                .zip(&self.genes)
+                .filter(|(wt, gt)| gt.word.word_type() != **wt)
+                .count() as f32
+        } else {
+            0.0
+        };
+
+        let mut previous_word: Option<WordType> = None;
+        let mut grammar_count: f32 = 0.0;
+        if CONFIG.use_grammar_fitness {
+            self.genes.iter().for_each(|gt| {
+                grammar_count += gt.word.grammar(previous_word);
+                previous_word = Some(gt.word.word_type());
+            })
+        };
         let structure_fitness: f32 = 1.0 * (1.0 / (structure_error_count + 1.0));
-        let fitness = structure_fitness;
+        let grammar_fitness: f32 = 1.0 / (grammar_count.abs() + 1.0);
+        let fitness = structure_fitness * grammar_fitness;
+
         self.fitness = Some(fitness)
     }
 }

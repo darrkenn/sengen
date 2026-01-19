@@ -4,10 +4,10 @@ words = [
   { word = "a", type = "Article" },
   { word = "an", type = "Article" },
   # Demonstrative
-  { word = "This", type = "Demonstrative" },
-  { word = "That", type = "Demonstrative" },
-  { word = "Those", type = "Demonstrative" },
-  { word = "These", type = "Demonstrative" },
+  { word = "this", type = "Demonstrative" },
+  { word = "that", type = "Demonstrative" },
+  { word = "those", type = "Demonstrative" },
+  { word = "these", type = "Demonstrative" },
   # Distributive
   { word = "each", type = "Distributive" },
   { word = "every", type = "Distributive" },
